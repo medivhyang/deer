@@ -13,11 +13,11 @@ import (
 type Middleware = func(http.Handler) http.Handler
 
 type Router struct {
-	prefix      string
-	entryMap    map[key]*entry
-	entries     []*entry
-	middlewares []Middleware
-	NotFound    http.Handler
+	prefix          string
+	entryMap        map[key]*entry
+	entries         []*entry
+	middlewares     []Middleware
+	notFoundHandler http.Handler
 }
 
 type key struct {
@@ -71,6 +71,11 @@ func New() *Router {
 
 func (router *Router) Prefix(p string) *Router {
 	router.prefix = normalizePrefix(p)
+	return router
+}
+
+func (router *Router) HandleNotFound(h http.Handler) *Router {
+	router.notFoundHandler = h
 	return router
 }
 
@@ -195,8 +200,8 @@ func (router *Router) Run(addr string) error {
 }
 
 func (router *Router) notFound(w http.ResponseWriter, r *http.Request) {
-	if router.NotFound != nil {
-		router.NotFound.ServeHTTP(w, r)
+	if router.notFoundHandler != nil {
+		router.notFoundHandler.ServeHTTP(w, r)
 		return
 	}
 	w.WriteHeader(http.StatusNotFound)
