@@ -55,8 +55,10 @@ func (e *entry) pathParams(path string) map[string]string {
 	return result
 }
 
-var namedParamPattern = regexp.MustCompile(":([^/]+)")
-var wildcardParamPattern = regexp.MustCompile("\\*([^/]+)")
+var (
+	namedParamPattern = regexp.MustCompile(":([^/]+)")
+	wildcardParamPattern = regexp.MustCompile("\\*([^/]+)")
+)
 
 func trPatternToRegexp(pattern string) string {
 	s := namedParamPattern.ReplaceAllString(pattern, "(?P<$1>[^/]+)")
