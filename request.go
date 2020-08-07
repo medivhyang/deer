@@ -11,7 +11,7 @@ import (
 
 var (
 	defaultSliceSeparator = ","
-	defaultTimeFormats    = []string {
+	defaultTimeFormats    = []string{
 		time.RFC3339,
 		"2006-01-02 15:04:05",
 		"2006-01-02",
@@ -24,7 +24,38 @@ func WrapRequest(r *http.Request) *RequestAdapter {
 }
 
 type RequestAdapter struct {
-	Raw *http.Request
+	pathParams map[string]string
+	Raw        *http.Request
+}
+
+func (request *RequestAdapter) Method() string {
+	return request.Raw.Method
+}
+
+func (request *RequestAdapter) Path() string {
+	return request.Raw.URL.Path
+}
+
+func (request *RequestAdapter) Header(key string) string {
+	return request.Raw.Header.Get(key)
+}
+
+func (request *RequestAdapter) SetHeader(key string, value string) {
+	request.Raw.Header.Set(key, value)
+}
+
+func (request *RequestAdapter) PathParams() map[string]string {
+	if request.pathParams == nil {
+		request.pathParams = PathParams(request.Raw)
+	}
+	return request.pathParams
+}
+
+func (request *RequestAdapter) PathParam(key string) string {
+	if request.pathParams == nil {
+		request.pathParams = PathParams(request.Raw)
+	}
+	return request.pathParams[key]
 }
 
 func (request *RequestAdapter) QueryExists(key string) bool {
@@ -152,7 +183,7 @@ func (request *RequestAdapter) FormSlice(key string, sep ...string) []string {
 		return nil
 	}
 	aSep := defaultSliceSeparator
-	if len(sep) > 0{
+	if len(sep) > 0 {
 		aSep = sep[0]
 	}
 	return strings.Split(request.Form(key), aSep)
@@ -166,7 +197,7 @@ func (request *RequestAdapter) FormSliceTrim(key string, sep ...string) []string
 	var result []string
 	for _, item := range items {
 		item = strings.TrimSpace(item)
-		if item == ""{
+		if item == "" {
 			continue
 		}
 		result = append(result, item)
