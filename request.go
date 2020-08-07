@@ -67,7 +67,7 @@ func (r *RequestAdapter) PathParamInt64(key string) (int64, error) {
 }
 
 func (r *RequestAdapter) PathParamFloat64(key string) (float64, error) {
-	return strconv.ParseFloat(r.PathParam(key),  64)
+	return strconv.ParseFloat(r.PathParam(key), 64)
 }
 
 func (r *RequestAdapter) PathParamBool(key string) (bool, error) {

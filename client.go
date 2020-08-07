@@ -4,135 +4,222 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
-var DefaultClient = WrapClient(&http.Client{})
-
-func Get(url string, query map[string]string, header map[string]string) (*ResponseAdapter, error) {
-	return DefaultClient.Get(url, query, header)
+type ClientBuilder struct {
+	prefix string
+	method string
+	path   string
+	query  map[string]string
+	header map[string]string
+	body   io.Reader
+	err    error
 }
 
-func GetText(url string, query map[string]string, header map[string]string) (string, error) {
-	return DefaultClient.GetText(url, query, header)
+func Get(path string) *ClientBuilder {
+	return &ClientBuilder{
+		path:   path,
+		method: http.MethodGet,
+	}
 }
 
-func GetJSON(url string, query map[string]string, header map[string]string, value interface{}) error {
-	return DefaultClient.GetJSON(url, query, header, value)
+func Post(path string) *ClientBuilder {
+	return &ClientBuilder{
+		path:   path,
+		method: http.MethodPost,
+	}
 }
 
-func GetXML(url string, query map[string]string, header map[string]string, value interface{}) error {
-	return DefaultClient.GetXML(url, query, header, value)
+func Put(path string) *ClientBuilder {
+	return &ClientBuilder{
+		path:   path,
+		method: http.MethodPut,
+	}
 }
 
-func Post(url string, body io.Reader, header map[string]string) (*ResponseAdapter, error) {
-	return DefaultClient.Post(url, body, header)
+func Delete(path string) *ClientBuilder {
+	return &ClientBuilder{
+		path:   path,
+		method: http.MethodDelete,
+	}
 }
 
-func PostJSON(url string, value interface{}, header map[string]string) (*ResponseAdapter, error) {
-	return DefaultClient.PostJSON(url, value, header)
+func Patch(path string) *ClientBuilder {
+	return &ClientBuilder{
+		path:   path,
+		method: http.MethodPatch,
+	}
 }
 
-func PostXML(url string, value interface{}, header map[string]string) (*ResponseAdapter, error) {
-	return DefaultClient.PostXML(url, value, header)
+func Options(path string) *ClientBuilder {
+	return &ClientBuilder{
+		path:   path,
+		method: http.MethodOptions,
+	}
 }
 
-func Do(method string, url string, body io.Reader, header map[string]string) (*ResponseAdapter, error) {
-	return DefaultClient.Do(method, url, body, header)
+func NewBuilder() *ClientBuilder {
+	return &ClientBuilder{}
 }
 
-func WrapClient(client *http.Client) *ClientAdapter {
-	return &ClientAdapter{Raw: client}
+func (c *ClientBuilder) Prefix(p string) *ClientBuilder {
+	c.prefix = p
+	return c
 }
 
-type ClientAdapter struct {
-	Raw *http.Client
+func (c *ClientBuilder) Get(path string) *ClientBuilder {
+	c.method = http.MethodGet
+	c.path = path
+	return c
 }
 
-func (client *ClientAdapter) Get(url string, query map[string]string, header map[string]string) (*ResponseAdapter, error) {
-	if strings.Contains(url, "?") {
-		url += "&"
+func (c *ClientBuilder) Post(path string) *ClientBuilder {
+	c.method = http.MethodPost
+	c.path = path
+	return c
+}
+
+func (c *ClientBuilder) Put(path string) *ClientBuilder {
+	c.method = http.MethodPut
+	c.path = path
+	return c
+}
+
+func (c *ClientBuilder) Delete(path string) *ClientBuilder {
+	c.method = http.MethodDelete
+	c.path = path
+	return c
+}
+
+func (c *ClientBuilder) Patch(path string) *ClientBuilder {
+	c.method = http.MethodPatch
+	c.path = path
+	return c
+}
+
+func (c *ClientBuilder) Options(path string) *ClientBuilder {
+	c.method = http.MethodOptions
+	c.path = path
+	return c
+}
+
+func (c *ClientBuilder) Query(q map[string]string) *ClientBuilder {
+	if c.query == nil {
+		c.query = map[string]string{}
+	}
+	for k, v := range q {
+		c.query[k] = v
+	}
+	return c
+}
+
+func (c *ClientBuilder) Header(h map[string]string) *ClientBuilder {
+	if c.header == nil {
+		c.header = map[string]string{}
+	}
+	for k, v := range h {
+		c.header[k] = v
+	}
+	return c
+}
+
+func (c *ClientBuilder) WithTextBody(text string) *ClientBuilder {
+	c.body = strings.NewReader(text)
+	return c
+}
+
+func (c *ClientBuilder) WithJSONBody(v interface{}) *ClientBuilder {
+	bs, err := json.Marshal(v)
+	if err != nil {
+		c.err = err
+		return c
+	}
+	c.body = bytes.NewReader(bs)
+	return c
+}
+
+func (c *ClientBuilder) WithXMLBody(v interface{}) *ClientBuilder {
+	bs, err := xml.Marshal(v)
+	if err != nil {
+		c.err = err
+		return c
+	}
+	c.body = bytes.NewReader(bs)
+	return c
+}
+
+func (c *ClientBuilder) WithFile(filename string) *ClientBuilder {
+	file, err := os.Open(filename)
+	if err != nil {
+		c.err = err
+		return c
+	}
+	c.body = file
+	return c
+}
+
+func (c *ClientBuilder) WithBodyReader(r io.Reader) *ClientBuilder {
+	c.body = r
+	return c
+}
+
+func (c *ClientBuilder) Do(client ...*http.Client) (*ResponseAdapter, error) {
+	if c.err != nil {
+		return nil, c.err
+	}
+
+	aURL := c.url()
+	if aURL == "" {
+		return nil, fmt.Errorf("deer: http client: require url")
+	}
+	if c.method == "" {
+		return nil, errors.New("deer: http client: require method")
+	}
+
+	request, err := http.NewRequest(c.method, aURL, c.body)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range c.header {
+		request.Header.Set(k, v)
+	}
+
+	var aClient *http.Client
+	if len(client) > 0 {
+		aClient = client[0]
 	} else {
-		url += "?"
+		aClient = http.DefaultClient
 	}
-	url += client.parseURLValues(query).Encode()
-	return client.Do(http.MethodGet, url, nil, header)
-}
 
-func (client *ClientAdapter) GetText(url string, query map[string]string, header map[string]string) (string, error) {
-	r, err := client.Get(url, query, header)
-	if err != nil {
-		return "", err
-	}
-	return r.Text()
-}
-
-func (client *ClientAdapter) GetJSON(url string, query map[string]string, header map[string]string, value interface{}) error {
-	r, err := client.Get(url, query, header)
-	if err != nil {
-		return err
-	}
-	return r.BindWithJSON(value)
-}
-
-func (client *ClientAdapter) GetXML(url string, query map[string]string, header map[string]string, value interface{}) error {
-	r, err := client.Get(url, query, header)
-	if err != nil {
-		return err
-	}
-	return r.BindWithXML(value)
-}
-
-func (client *ClientAdapter) Post(url string, body io.Reader, header map[string]string) (*ResponseAdapter, error) {
-	return client.Do(http.MethodPost, url, body, header)
-}
-
-func (client *ClientAdapter) PostJSON(url string, value interface{}, header map[string]string) (*ResponseAdapter, error) {
-	bs, err := json.Marshal(value)
+	response, err := aClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
-	return client.Do(http.MethodPost, url, bytes.NewReader(bs), header)
+
+	return WrapResponse(response), nil
 }
 
-func (client *ClientAdapter) PostXML(url string, value interface{}, header map[string]string) (*ResponseAdapter, error) {
-	bs, err := xml.Marshal(value)
-	if err != nil {
-		return nil, err
+func (c *ClientBuilder) url() string {
+	s := c.prefix + c.path
+	if strings.Contains(s, "?") {
+		s += "&"
+	} else {
+		s += "?"
 	}
-	return client.Do(http.MethodPost, url, bytes.NewReader(bs), header)
-}
-
-func (client *ClientAdapter) Do(method string, url string, body io.Reader, header map[string]string) (*ResponseAdapter, error) {
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, err
+	if len(c.query) > 0 {
+		vs := url.Values{}
+		for k, v := range c.query {
+			vs.Set(k, v)
+		}
+		s += vs.Encode()
 	}
-	for k, v := range header {
-		req.Header.Set(k, v)
-	}
-	resp, err := client.Raw.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	return WrapResponse(resp), nil
-}
-
-func (client *ClientAdapter) parseURLValues(m map[string]string) *url.Values {
-	values := url.Values{}
-	for k, v := range m {
-		values.Set(k, v)
-	}
-	return &values
-}
-
-func (client *ClientAdapter) parseHTTPHeader(m map[string]string) *http.Header {
-	header := http.Header{}
-	for k, v := range m {
-		header.Set(k, v)
-	}
-	return &header
+	return s
 }
