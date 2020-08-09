@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_trPatternToRegexp(t *testing.T) {
+func Test_trPathPatternToRegexpPattern(t *testing.T) {
 	tests := []struct {
 		name string
 		path string
@@ -16,8 +16,8 @@ func Test_trPatternToRegexp(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := trPatternToRegexp(tt.path); got != tt.want {
-				t.Errorf("trPatternToRegexp() = %v, want %v", got, tt.want)
+			if got := trPathPatternToRegexpPattern(tt.path); got != tt.want {
+				t.Errorf("trPathPatternToRegexpPattern() = %v, want %v", got, tt.want)
 			}
 		})
 	}

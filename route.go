@@ -35,14 +35,14 @@ type entry struct {
 
 func (e *entry) regexpMatch(path string) bool {
 	if e.regexp == nil {
-		e.regexp = regexp.MustCompile(trPatternToRegexp(e.pattern))
+		e.regexp = regexp.MustCompile(trPathPatternToRegexpPattern(e.pattern))
 	}
 	return e.regexp.MatchString(path)
 }
 
 func (e *entry) pathParams(path string) map[string]string {
 	if e.regexp == nil {
-		e.regexp = regexp.MustCompile(trPatternToRegexp(e.pattern))
+		e.regexp = regexp.MustCompile(trPathPatternToRegexpPattern(e.pattern))
 	}
 	matches := e.regexp.FindStringSubmatch(path)
 	names := e.regexp.SubexpNames()
@@ -60,7 +60,7 @@ var (
 	wildcardParamPattern = regexp.MustCompile("\\*([^/]+)")
 )
 
-func trPatternToRegexp(pattern string) string {
+func trPathPatternToRegexpPattern(pattern string) string {
 	s := namedParamPattern.ReplaceAllString(pattern, "(?P<$1>[^/]+)")
 	s = wildcardParamPattern.ReplaceAllString(s, "(?P<$1>.*)")
 	s = "^" + s + "$"
