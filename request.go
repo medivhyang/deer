@@ -19,62 +19,62 @@ var (
 	}
 )
 
-func WrapRequest(r *http.Request) *RequestAdapter {
-	return &RequestAdapter{Raw: r}
+func WrapRequest(r *http.Request) *Request {
+	return &Request{Raw: r}
 }
 
-type RequestAdapter struct {
+type Request struct {
 	pathParams map[string]string
 	Raw        *http.Request
 }
 
-func (r *RequestAdapter) Method() string {
+func (r *Request) Method() string {
 	return r.Raw.Method
 }
 
-func (r *RequestAdapter) Path() string {
+func (r *Request) Path() string {
 	return r.Raw.URL.Path
 }
 
-func (r *RequestAdapter) Header(key string) string {
+func (r *Request) Header(key string) string {
 	return r.Raw.Header.Get(key)
 }
 
-func (r *RequestAdapter) SetHeader(key string, value string) {
+func (r *Request) SetHeader(key string, value string) {
 	r.Raw.Header.Set(key, value)
 }
 
-func (r *RequestAdapter) PathParams() map[string]string {
+func (r *Request) PathParams() map[string]string {
 	if r.pathParams == nil {
 		r.pathParams = PathParams(r.Raw)
 	}
 	return r.pathParams
 }
 
-func (r *RequestAdapter) PathParam(key string) string {
+func (r *Request) PathParam(key string) string {
 	if r.pathParams == nil {
 		r.pathParams = PathParams(r.Raw)
 	}
 	return r.pathParams[key]
 }
 
-func (r *RequestAdapter) PathParamInt(key string) (int, error) {
+func (r *Request) PathParamInt(key string) (int, error) {
 	return strconv.Atoi(r.PathParam(key))
 }
 
-func (r *RequestAdapter) PathParamInt64(key string) (int64, error) {
+func (r *Request) PathParamInt64(key string) (int64, error) {
 	return strconv.ParseInt(r.PathParam(key), 10, 64)
 }
 
-func (r *RequestAdapter) PathParamFloat64(key string) (float64, error) {
+func (r *Request) PathParamFloat64(key string) (float64, error) {
 	return strconv.ParseFloat(r.PathParam(key), 64)
 }
 
-func (r *RequestAdapter) PathParamBool(key string) (bool, error) {
+func (r *Request) PathParamBool(key string) (bool, error) {
 	return strconv.ParseBool(r.PathParam(key))
 }
 
-func (r *RequestAdapter) PathParamTime(key string, layout ...string) (t time.Time, err error) {
+func (r *Request) PathParamTime(key string, layout ...string) (t time.Time, err error) {
 	if len(layout) > 0 {
 		return time.Parse(layout[0], r.PathParam(key))
 	}
@@ -87,7 +87,7 @@ func (r *RequestAdapter) PathParamTime(key string, layout ...string) (t time.Tim
 	return
 }
 
-func (r *RequestAdapter) PathParamTimeUnix(key string) (t time.Time, err error) {
+func (r *Request) PathParamTimeUnix(key string) (t time.Time, err error) {
 	sec, err := r.PathParamInt64(key)
 	if err != nil {
 		return time.Time{}, nil
@@ -95,7 +95,7 @@ func (r *RequestAdapter) PathParamTimeUnix(key string) (t time.Time, err error) 
 	return time.Unix(sec, 0), nil
 }
 
-func (r *RequestAdapter) QueryExists(key string) bool {
+func (r *Request) QueryExists(key string) bool {
 	values := r.Raw.URL.Query()
 	if values == nil {
 		return false
@@ -103,11 +103,11 @@ func (r *RequestAdapter) QueryExists(key string) bool {
 	return len(values[key]) > 0
 }
 
-func (r *RequestAdapter) Query(key string) string {
+func (r *Request) Query(key string) string {
 	return r.Raw.URL.Query().Get(key)
 }
 
-func (r *RequestAdapter) QuerySlice(key string, sep ...string) []string {
+func (r *Request) QuerySlice(key string, sep ...string) []string {
 	if !r.QueryExists(key) {
 		return nil
 	}
@@ -118,7 +118,7 @@ func (r *RequestAdapter) QuerySlice(key string, sep ...string) []string {
 	return strings.Split(r.Query(key), aSep)
 }
 
-func (r *RequestAdapter) QuerySliceTrim(key string, sep ...string) []string {
+func (r *Request) QuerySliceTrim(key string, sep ...string) []string {
 	items := r.QuerySlice(key, sep...)
 	if len(items) == 0 {
 		return nil
@@ -134,11 +134,11 @@ func (r *RequestAdapter) QuerySliceTrim(key string, sep ...string) []string {
 	return result
 }
 
-func (r *RequestAdapter) QueryInt(key string) (int, error) {
+func (r *Request) QueryInt(key string) (int, error) {
 	return strconv.Atoi(r.Query(key))
 }
 
-func (r *RequestAdapter) QueryIntSlice(key string, sep ...string) ([]int, error) {
+func (r *Request) QueryIntSlice(key string, sep ...string) ([]int, error) {
 	items := r.QuerySliceTrim(key, sep...)
 	if len(items) == 0 {
 		return nil, nil
@@ -154,11 +154,11 @@ func (r *RequestAdapter) QueryIntSlice(key string, sep ...string) ([]int, error)
 	return result, nil
 }
 
-func (r *RequestAdapter) QueryInt64(key string) (int64, error) {
+func (r *Request) QueryInt64(key string) (int64, error) {
 	return strconv.ParseInt(r.Query(key), 10, 64)
 }
 
-func (r *RequestAdapter) QueryInt64Slice(key string, sep ...string) ([]int64, error) {
+func (r *Request) QueryInt64Slice(key string, sep ...string) ([]int64, error) {
 	items := r.QuerySliceTrim(key, sep...)
 	if len(items) == 0 {
 		return nil, nil
@@ -174,15 +174,15 @@ func (r *RequestAdapter) QueryInt64Slice(key string, sep ...string) ([]int64, er
 	return result, nil
 }
 
-func (r *RequestAdapter) QueryFloat64(key string) (float64, error) {
+func (r *Request) QueryFloat64(key string) (float64, error) {
 	return strconv.ParseFloat(r.Query(key), 64)
 }
 
-func (r *RequestAdapter) QueryBool(key string) (bool, error) {
+func (r *Request) QueryBool(key string) (bool, error) {
 	return strconv.ParseBool(r.Query(key))
 }
 
-func (r *RequestAdapter) QueryTime(key string, layout ...string) (t time.Time, err error) {
+func (r *Request) QueryTime(key string, layout ...string) (t time.Time, err error) {
 	if len(layout) > 0 {
 		return time.Parse(layout[0], r.Query(key))
 	}
@@ -195,7 +195,7 @@ func (r *RequestAdapter) QueryTime(key string, layout ...string) (t time.Time, e
 	return
 }
 
-func (r *RequestAdapter) QueryTimeUnix(key string) (time.Time, error) {
+func (r *Request) QueryTimeUnix(key string) (time.Time, error) {
 	sec, err := r.QueryInt64(key)
 	if err != nil {
 		return time.Time{}, nil
@@ -203,7 +203,7 @@ func (r *RequestAdapter) QueryTimeUnix(key string) (time.Time, error) {
 	return time.Unix(sec, 0), nil
 }
 
-func (r *RequestAdapter) FormExists(key string) bool {
+func (r *Request) FormExists(key string) bool {
 	_ = r.Raw.ParseForm()
 	if r.Raw.PostForm == nil {
 		return false
@@ -211,11 +211,11 @@ func (r *RequestAdapter) FormExists(key string) bool {
 	return len(r.Raw.PostForm[key]) > 0
 }
 
-func (r *RequestAdapter) Form(key string) string {
+func (r *Request) Form(key string) string {
 	return r.Raw.PostFormValue(key)
 }
 
-func (r *RequestAdapter) FormSlice(key string, sep ...string) []string {
+func (r *Request) FormSlice(key string, sep ...string) []string {
 	if !r.FormExists(key) {
 		return nil
 	}
@@ -226,7 +226,7 @@ func (r *RequestAdapter) FormSlice(key string, sep ...string) []string {
 	return strings.Split(r.Form(key), aSep)
 }
 
-func (r *RequestAdapter) FormSliceTrim(key string, sep ...string) []string {
+func (r *Request) FormSliceTrim(key string, sep ...string) []string {
 	items := r.FormSlice(key, sep...)
 	if len(items) == 0 {
 		return nil
@@ -242,11 +242,11 @@ func (r *RequestAdapter) FormSliceTrim(key string, sep ...string) []string {
 	return result
 }
 
-func (r *RequestAdapter) FormInt(key string) (int, error) {
+func (r *Request) FormInt(key string) (int, error) {
 	return strconv.Atoi(r.Form(key))
 }
 
-func (r *RequestAdapter) FormIntSlice(key string, sep ...string) ([]int, error) {
+func (r *Request) FormIntSlice(key string, sep ...string) ([]int, error) {
 	items := r.FormSliceTrim(key, sep...)
 	if len(items) == 0 {
 		return nil, nil
@@ -262,11 +262,11 @@ func (r *RequestAdapter) FormIntSlice(key string, sep ...string) ([]int, error) 
 	return result, nil
 }
 
-func (r *RequestAdapter) FormInt64(key string) (int64, error) {
+func (r *Request) FormInt64(key string) (int64, error) {
 	return strconv.ParseInt(r.Form(key), 10, 64)
 }
 
-func (r *RequestAdapter) FormInt64Slice(key string, sep ...string) ([]int64, error) {
+func (r *Request) FormInt64Slice(key string, sep ...string) ([]int64, error) {
 	items := r.FormSliceTrim(key, sep...)
 	if len(items) == 0 {
 		return nil, nil
@@ -282,15 +282,15 @@ func (r *RequestAdapter) FormInt64Slice(key string, sep ...string) ([]int64, err
 	return result, nil
 }
 
-func (r *RequestAdapter) FormFloat64(key string) (float64, error) {
+func (r *Request) FormFloat64(key string) (float64, error) {
 	return strconv.ParseFloat(r.Form(key), 64)
 }
 
-func (r *RequestAdapter) FormBool(key string) (bool, error) {
+func (r *Request) FormBool(key string) (bool, error) {
 	return strconv.ParseBool(r.Form(key))
 }
 
-func (r *RequestAdapter) FormTime(key string, layout ...string) (t time.Time, err error) {
+func (r *Request) FormTime(key string, layout ...string) (t time.Time, err error) {
 	if len(layout) > 0 {
 		return time.Parse(layout[0], r.Form(key))
 	}
@@ -303,7 +303,7 @@ func (r *RequestAdapter) FormTime(key string, layout ...string) (t time.Time, er
 	return
 }
 
-func (r *RequestAdapter) FormTimeUnix(key string) (time.Time, error) {
+func (r *Request) FormTimeUnix(key string) (time.Time, error) {
 	sec, err := r.FormInt64(key)
 	if err != nil {
 		return time.Time{}, nil
@@ -311,10 +311,10 @@ func (r *RequestAdapter) FormTimeUnix(key string) (time.Time, error) {
 	return time.Unix(sec, 0), nil
 }
 
-func (r *RequestAdapter) BindWithJSON(value interface{}) error {
+func (r *Request) BindWithJSON(value interface{}) error {
 	return json.NewDecoder(r.Raw.Body).Decode(value)
 }
 
-func (r *RequestAdapter) BindWithXML(value interface{}) error {
+func (r *Request) BindWithXML(value interface{}) error {
 	return xml.NewDecoder(r.Raw.Body).Decode(value)
 }

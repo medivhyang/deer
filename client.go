@@ -170,7 +170,7 @@ func (c *ClientBuilder) WithBodyReader(r io.Reader) *ClientBuilder {
 	return c
 }
 
-func (c *ClientBuilder) Do(client ...*http.Client) (*ResponseAdapter, error) {
+func (c *ClientBuilder) Do(client ...*http.Client) (*Response, error) {
 	if c.err != nil {
 		return nil, c.err
 	}

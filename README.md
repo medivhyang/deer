@@ -27,7 +27,7 @@ import (
 func main() {
 	d := deer.New().Use(middlewares.Trace())
 
-	d.Get("/", deer.HandlerFunc(func(w *deer.ResponseWriterAdapter, r *deer.RequestAdapter) {
+	d.Get("/", deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")
 	}))
 
@@ -41,13 +41,13 @@ Demo path params usage:
 func main() {
 	d := deer.New().Use(middlewares.Trace())
 
-	d.Get("/orgs/:oid", deer.HandlerFunc(func(w *deer.ResponseWriterAdapter, r *deer.RequestAdapter) {
+	d.Get("/orgs/:oid", deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("oid = %s", r.PathParam("oid")))
 	}))
-	d.Get("/orgs/:oid/users/:uid", deer.HandlerFunc(func(w *deer.ResponseWriterAdapter, r *deer.RequestAdapter) {
+	d.Get("/orgs/:oid/users/:uid", deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("oid = %s, uid = %s", r.PathParam("oid"), r.PathParam("uid")))
 	}))
-	d.Get("/static/*filename", deer.HandlerFunc(func(w *deer.ResponseWriterAdapter, r *deer.RequestAdapter) {
+	d.Get("/static/*filename", deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("filename = %s", r.PathParam("filename")))
 	}))
 

@@ -9,23 +9,23 @@ import (
 	"net/http"
 )
 
-func WrapResponse(r *http.Response) *ResponseAdapter {
-	return &ResponseAdapter{Raw: r}
+func WrapResponse(r *http.Response) *Response {
+	return &Response{Raw: r}
 }
 
-type ResponseAdapter struct {
+type Response struct {
 	read bool
-	Raw *http.Response
+	Raw  *http.Response
 }
 
-func (r *ResponseAdapter) ReadCloser() io.ReadCloser {
+func (r *Response) ReadCloser() io.ReadCloser {
 	if r.read {
 		return nil
 	}
 	return r.Raw.Body
 }
 
-func (r *ResponseAdapter) Bytes() ([]byte, error) {
+func (r *Response) Bytes() ([]byte, error) {
 	if r.read {
 		return nil, errors.New("deer: http response: body has read")
 	}
@@ -40,7 +40,7 @@ func (r *ResponseAdapter) Bytes() ([]byte, error) {
 	return content, nil
 }
 
-func (r *ResponseAdapter) Text() (string, error) {
+func (r *Response) Text() (string, error) {
 	if r.read {
 		return "", errors.New("deer: http response: body has read")
 	}
@@ -55,7 +55,7 @@ func (r *ResponseAdapter) Text() (string, error) {
 	return string(bs), nil
 }
 
-func (r *ResponseAdapter) BindWithJSON(value interface{}) error {
+func (r *Response) BindWithJSON(value interface{}) error {
 	if r.read {
 		return errors.New("deer: http response: body has read")
 	}
@@ -66,7 +66,7 @@ func (r *ResponseAdapter) BindWithJSON(value interface{}) error {
 	return json.NewDecoder(r.Raw.Body).Decode(value)
 }
 
-func (r *ResponseAdapter) BindWithXML(value interface{}) error {
+func (r *Response) BindWithXML(value interface{}) error {
 	if r.read {
 		return errors.New("deer: http response: body has read")
 	}

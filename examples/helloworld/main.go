@@ -10,7 +10,7 @@ import (
 func main() {
 	d := deer.New().Use(middlewares.Trace())
 
-	d.Get("/", deer.HandlerFunc(func(w *deer.ResponseWriterAdapter, r *deer.RequestAdapter) {
+	d.Get("/", deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")
 	}))
 
