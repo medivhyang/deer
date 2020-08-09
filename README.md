@@ -7,7 +7,7 @@ Deer is a go http libary, not framework.
 1. Lightweight, no have too much concept.
 2. Less intrusion, just libary, not framework.
 3. Native, compatible with standard libary.
-4. Rich Feature, support group route, path params, and middleware etc.
+4. Rich feature, support group route, path params, and middleware etc.
 5. Efficient, follow engineering practice.
 
 ## Quick Start
