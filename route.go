@@ -56,7 +56,7 @@ func (e *entry) pathParams(path string) map[string]string {
 }
 
 var (
-	namedParamPattern = regexp.MustCompile(":([^/]+)")
+	namedParamPattern    = regexp.MustCompile(":([^/]+)")
 	wildcardParamPattern = regexp.MustCompile("\\*([^/]+)")
 )
 
@@ -145,7 +145,7 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if regexpMatch {
 		r = r.WithContext(context.WithValue(r.Context(), pathParamsContextKey, e.pathParams(path)))
 	}
-	h := chain(chain(e.handler, e.middlewares...), router.middlewares...)
+	h := Chain(Chain(e.handler, e.middlewares...), router.middlewares...)
 	h.ServeHTTP(w, r)
 }
 
@@ -250,7 +250,7 @@ func appendSorted(es []*entry, e *entry) []*entry {
 	return es
 }
 
-func chain(h http.Handler, middlewares ...Middleware) http.Handler {
+func Chain(h http.Handler, middlewares ...Middleware) http.Handler {
 	for _, m := range middlewares {
 		if m != nil {
 			h = m(h)
