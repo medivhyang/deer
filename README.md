@@ -47,7 +47,7 @@ func main() {
 	d.Get("/orgs/:oid/users/:uid", deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("oid = %s, uid = %s", r.PathParam("oid"), r.PathParam("uid")))
 	}))
-	d.Get("/static/*filename", deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
+	d.Get("/files/*filename", deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("filename = %s", r.PathParam("filename")))
 	}))
 
