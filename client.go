@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-type ClientBuilder struct {
+type RequestBuilder struct {
 	prefix string
 	method string
 	path   string
@@ -23,94 +23,94 @@ type ClientBuilder struct {
 	err    error
 }
 
-func Get(path string) *ClientBuilder {
-	return &ClientBuilder{
+func Get(path string) *RequestBuilder {
+	return &RequestBuilder{
 		path:   path,
 		method: http.MethodGet,
 	}
 }
 
-func Post(path string) *ClientBuilder {
-	return &ClientBuilder{
+func Post(path string) *RequestBuilder {
+	return &RequestBuilder{
 		path:   path,
 		method: http.MethodPost,
 	}
 }
 
-func Put(path string) *ClientBuilder {
-	return &ClientBuilder{
+func Put(path string) *RequestBuilder {
+	return &RequestBuilder{
 		path:   path,
 		method: http.MethodPut,
 	}
 }
 
-func Delete(path string) *ClientBuilder {
-	return &ClientBuilder{
+func Delete(path string) *RequestBuilder {
+	return &RequestBuilder{
 		path:   path,
 		method: http.MethodDelete,
 	}
 }
 
-func Patch(path string) *ClientBuilder {
-	return &ClientBuilder{
+func Patch(path string) *RequestBuilder {
+	return &RequestBuilder{
 		path:   path,
 		method: http.MethodPatch,
 	}
 }
 
-func Options(path string) *ClientBuilder {
-	return &ClientBuilder{
+func Options(path string) *RequestBuilder {
+	return &RequestBuilder{
 		path:   path,
 		method: http.MethodOptions,
 	}
 }
 
-func NewBuilder() *ClientBuilder {
-	return &ClientBuilder{}
+func NewBuilder() *RequestBuilder {
+	return &RequestBuilder{}
 }
 
-func (c *ClientBuilder) Prefix(p string) *ClientBuilder {
+func (c *RequestBuilder) Prefix(p string) *RequestBuilder {
 	c.prefix = p
 	return c
 }
 
-func (c *ClientBuilder) Get(path string) *ClientBuilder {
+func (c *RequestBuilder) Get(path string) *RequestBuilder {
 	c.method = http.MethodGet
 	c.path = path
 	return c
 }
 
-func (c *ClientBuilder) Post(path string) *ClientBuilder {
+func (c *RequestBuilder) Post(path string) *RequestBuilder {
 	c.method = http.MethodPost
 	c.path = path
 	return c
 }
 
-func (c *ClientBuilder) Put(path string) *ClientBuilder {
+func (c *RequestBuilder) Put(path string) *RequestBuilder {
 	c.method = http.MethodPut
 	c.path = path
 	return c
 }
 
-func (c *ClientBuilder) Delete(path string) *ClientBuilder {
+func (c *RequestBuilder) Delete(path string) *RequestBuilder {
 	c.method = http.MethodDelete
 	c.path = path
 	return c
 }
 
-func (c *ClientBuilder) Patch(path string) *ClientBuilder {
+func (c *RequestBuilder) Patch(path string) *RequestBuilder {
 	c.method = http.MethodPatch
 	c.path = path
 	return c
 }
 
-func (c *ClientBuilder) Options(path string) *ClientBuilder {
+func (c *RequestBuilder) Options(path string) *RequestBuilder {
 	c.method = http.MethodOptions
 	c.path = path
 	return c
 }
 
-func (c *ClientBuilder) Query(q map[string]string) *ClientBuilder {
+func (c *RequestBuilder) Query(q map[string]string) *RequestBuilder {
 	if c.query == nil {
 		c.query = map[string]string{}
 	}
@@ -120,7 +120,7 @@ func (c *ClientBuilder) Query(q map[string]string) *ClientBuilder {
 	return c
 }
 
-func (c *ClientBuilder) Header(h map[string]string) *ClientBuilder {
+func (c *RequestBuilder) Header(h map[string]string) *RequestBuilder {
 	if c.header == nil {
 		c.header = map[string]string{}
 	}
@@ -130,12 +130,12 @@ func (c *ClientBuilder) Header(h map[string]string) *ClientBuilder {
 	return c
 }
 
-func (c *ClientBuilder) WithTextBody(text string) *ClientBuilder {
+func (c *RequestBuilder) WithTextBody(text string) *RequestBuilder {
 	c.body = strings.NewReader(text)
 	return c
 }
 
-func (c *ClientBuilder) WithJSONBody(v interface{}) *ClientBuilder {
+func (c *RequestBuilder) WithJSONBody(v interface{}) *RequestBuilder {
 	bs, err := json.Marshal(v)
 	if err != nil {
 		c.err = err
@@ -145,7 +145,7 @@ func (c *ClientBuilder) WithJSONBody(v interface{}) *ClientBuilder {
 	return c
 }
 
-func (c *ClientBuilder) WithXMLBody(v interface{}) *ClientBuilder {
+func (c *RequestBuilder) WithXMLBody(v interface{}) *RequestBuilder {
 	bs, err := xml.Marshal(v)
 	if err != nil {
 		c.err = err
@@ -155,7 +155,7 @@ func (c *ClientBuilder) WithXMLBody(v interface{}) *ClientBuilder {
 	return c
 }
 
-func (c *ClientBuilder) WithFile(filename string) *ClientBuilder {
+func (c *RequestBuilder) WithFile(filename string) *RequestBuilder {
 	file, err := os.Open(filename)
 	if err != nil {
 		c.err = err
@@ -165,12 +165,12 @@ func (c *ClientBuilder) WithFile(filename string) *ClientBuilder {
 	return c
 }
 
-func (c *ClientBuilder) WithBodyReader(r io.Reader) *ClientBuilder {
+func (c *RequestBuilder) WithBodyReader(r io.Reader) *RequestBuilder {
 	c.body = r
 	return c
 }
 
-func (c *ClientBuilder) Do(client ...*http.Client) (*Response, error) {
+func (c *RequestBuilder) Do(client ...*http.Client) (*Response, error) {
 	if c.err != nil {
 		return nil, c.err
 	}
@@ -207,7 +207,7 @@ func (c *ClientBuilder) Do(client ...*http.Client) (*Response, error) {
 	return WrapResponse(response), nil
 }
 
-func (c *ClientBuilder) url() string {
+func (c *RequestBuilder) url() string {
 	s := c.prefix + c.path
 	if strings.Contains(s, "?") {
 		s += "&"
