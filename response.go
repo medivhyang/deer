@@ -18,7 +18,7 @@ type Response struct {
 	Raw  *http.Response
 }
 
-func (r *Response) ReadCloser() io.ReadCloser {
+func (r *Response) Body() io.ReadCloser {
 	if r.read {
 		return nil
 	}
