@@ -1,24 +1,25 @@
 package middlewares
 
 import (
+	"github.com/medivhyang/deer"
 	"log"
 	"net/http"
 )
 
-func Trace(callback ...func(r *http.Request)) func(http.Handler) http.Handler {
-	var f func(r *http.Request)
+func Trace(callback ...func(r *deer.Request)) deer.Middleware {
+	var f func(r *deer.Request)
 	if len(callback) > 0 {
 		f = callback[0]
 	}
 	if f == nil {
-		f = func(r *http.Request) {
-			log.Printf("%s %s", r.Method, r.URL.Path)
+		f = func(r *deer.Request) {
+			log.Printf("%s %s", r.Method(), r.Path())
 		}
 	}
 	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 			f(r)
-			h.ServeHTTP(w, r)
+			h.ServeHTTP(w.Raw, r.Raw)
 		})
 	}
 }
