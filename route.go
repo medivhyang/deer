@@ -187,13 +187,31 @@ func (s sortedEntrySlice) Len() int {
 	return len(s)
 }
 
+var sortMethods = map[string]int{
+	"":                 0,
+	http.MethodGet:     1,
+	http.MethodHead:    2,
+	http.MethodPost:    3,
+	http.MethodPut:     4,
+	http.MethodPatch:   5,
+	http.MethodDelete:  6,
+	http.MethodConnect: 7,
+	http.MethodOptions: 8,
+	http.MethodTrace:   9,
+}
+
 func (s sortedEntrySlice) Less(i, j int) bool {
 	ci := len(strings.Split(s[i].pattern, "/"))
 	cj := len(strings.Split(s[j].pattern, "/"))
 	if ci != cj {
 		return ci < cj
 	}
-	return s[i].pattern < s[j].pattern
+	if s[i].pattern != s[j].pattern {
+		return s[i].pattern < s[j].pattern
+	}
+	mi := strings.ToUpper(s[i].method)
+	mj := strings.ToUpper(s[j].method)
+	return sortMethods[mi] < sortMethods[mj]
 }
 
 func (s sortedEntrySlice) Swap(i, j int) {
