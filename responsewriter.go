@@ -54,12 +54,14 @@ func (w *ResponseWriter) JSON(statusCode int, value interface{}) {
 			if _, err := io.WriteString(w.Raw, "{}"); err != nil {
 				http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
 			}
+			return
 		}
 	case reflect.Slice:
 		if reflectValue.IsNil() {
 			if _, err := io.WriteString(w.Raw, "[]"); err != nil {
 				http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
 			}
+			return
 		}
 	}
 	if  err := json.NewEncoder(w.Raw).Encode(value); err != nil {
