@@ -181,17 +181,39 @@ func (router *Router) Options(pattern string, handler http.Handler, middlewares 
 	return router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 
+type sortedEntrySlice []*entry
+
+func (s sortedEntrySlice) Len() int {
+	return len(s)
+}
+
+func (s sortedEntrySlice) Less(i, j int) bool {
+	ci := len(strings.Split(s[i].pattern, "/"))
+	cj := len(strings.Split(s[j].pattern, "/"))
+	if ci != cj {
+		return ci < cj
+	}
+	return s[i].pattern < s[j].pattern
+}
+
+func (s sortedEntrySlice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
 func (router *Router) String() string {
 	builder := bytes.Buffer{}
 	builder.WriteString("---\n")
 
-	for i := len(router.entries) - 1; i >= 0; i-- {
-		method, path := router.entries[i].method, router.entries[i].pattern
+	sorted := append([]*entry{}, router.entries...)
+	sort.Sort(sortedEntrySlice(sorted))
+
+	for _, entry := range sorted {
+		method, pattern := entry.method, entry.pattern
 		if method == "" {
 			method = "ANY"
 		}
-		path = router.prefix + path
-		builder.WriteString(fmt.Sprintf("%s %s\n", method, path))
+		pattern = router.prefix + pattern
+		builder.WriteString(fmt.Sprintf("%s %s\n", method, pattern))
 	}
 	builder.WriteString("---\n")
 	return builder.String()
