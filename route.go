@@ -213,7 +213,7 @@ func (router *Router) String() string {
 			method = "ANY"
 		}
 		pattern = router.prefix + pattern
-		builder.WriteString(fmt.Sprintf("%s %s\n", method, pattern))
+		builder.WriteString(fmt.Sprintf("%-7s %s\n", method, pattern))
 	}
 	builder.WriteString("---\n")
 	return builder.String()
