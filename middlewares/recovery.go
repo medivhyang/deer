@@ -5,28 +5,30 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/medivhyang/deer"
 )
 
-func Recovery(callback ...func(err interface{}, w http.ResponseWriter, r *http.Request)) func(http.Handler) http.Handler {
-	var f func(err interface{}, w http.ResponseWriter, r *http.Request)
+func Recovery(callback ...func(err interface{}, w *deer.ResponseWriter, r *deer.Request)) deer.Middleware {
+	var f func(err interface{}, w *deer.ResponseWriter, r *deer.Request)
 	if len(callback) > 0 {
 		f = callback[0]
 	}
 	if f == nil {
-		f = func(err interface{}, w http.ResponseWriter, r *http.Request) {
+		f = func(err interface{}, w *deer.ResponseWriter, r *deer.Request) {
 			log.Printf("deer: catch panic: %v\n", err)
 			log.Println(string(debug.Stack()))
-			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+			w.Text(http.StatusInternalServerError, fmt.Sprint(err))
 		}
 	}
 	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
 			defer func() {
 				if err := recover(); err != nil {
 					f(err, w, r)
 				}
 			}()
-			h.ServeHTTP(w, r)
+			h.ServeHTTP(w.Raw, r.Raw)
 		})
 	}
 }

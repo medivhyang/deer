@@ -1,6 +1,7 @@
 package deer
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"net/http"
@@ -26,6 +27,10 @@ func WrapRequest(r *http.Request) *Request {
 type Request struct {
 	pathParams map[string]string
 	Raw        *http.Request
+}
+
+func (r *Request) Context() context.Context {
+	return r.Raw.Context()
 }
 
 func (r *Request) Method() string {
