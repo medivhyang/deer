@@ -44,26 +44,25 @@ func (w *ResponseWriter) HTML(statusCode int, content string) {
 func (w *ResponseWriter) JSON(statusCode int, value interface{}) {
 	w.Raw.Header().Set("Content-Type", "application/json")
 	w.Raw.WriteHeader(statusCode)
-	if value != nil {
-		if  err := json.NewEncoder(w.Raw).Encode(value); err != nil {
-			http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
-		}
-		return
+	reflectValue := reflect.ValueOf(value)
+	for reflectValue.Kind() == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
 	}
-	reflectType := reflect.TypeOf(value)
-	for reflectType.Kind() == reflect.Ptr {
-		reflectType = reflectType.Elem()
-	}
-	var nilContent string
-	switch reflectType.Kind() {
-	case reflect.Slice:
-		nilContent = "[]"
+	switch reflectValue.Kind() {
 	case reflect.Struct, reflect.Map:
-		nilContent = "{}"
-	default:
-		nilContent = "null"
+		if reflectValue.IsNil() {
+			if _, err := io.WriteString(w.Raw, "{}"); err != nil {
+				http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
+			}
+		}
+	case reflect.Slice:
+		if reflectValue.IsNil() {
+			if _, err := io.WriteString(w.Raw, "[]"); err != nil {
+				http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
+			}
+		}
 	}
-	if _, err := io.WriteString(w.Raw, nilContent); err != nil {
+	if  err := json.NewEncoder(w.Raw).Encode(value); err != nil {
 		http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
 	}
 }
