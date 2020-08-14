@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"io"
 	"net/http"
-	"reflect"
 )
 
 func WrapResponseWriter(w http.ResponseWriter) *ResponseWriter {
@@ -44,26 +43,6 @@ func (w *ResponseWriter) HTML(statusCode int, content string) {
 func (w *ResponseWriter) JSON(statusCode int, value interface{}) {
 	w.Raw.Header().Set("Content-Type", "application/json")
 	w.Raw.WriteHeader(statusCode)
-	reflectValue := reflect.ValueOf(value)
-	for reflectValue.Kind() == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-	}
-	switch reflectValue.Kind() {
-	case reflect.Struct, reflect.Map:
-		if reflectValue.IsNil() {
-			if _, err := io.WriteString(w.Raw, "{}"); err != nil {
-				http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
-			}
-			return
-		}
-	case reflect.Slice:
-		if reflectValue.IsNil() {
-			if _, err := io.WriteString(w.Raw, "[]"); err != nil {
-				http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
-			}
-			return
-		}
-	}
 	if  err := json.NewEncoder(w.Raw).Encode(value); err != nil {
 		http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
 	}
