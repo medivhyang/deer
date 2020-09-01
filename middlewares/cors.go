@@ -23,10 +23,6 @@ func CORS(config ...CORSConfig) deer.Middleware {
 	}
 	return func(h http.Handler) http.Handler {
 		return deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
-			if r.Method() != http.MethodOptions {
-				h.ServeHTTP(w.Raw, r.Raw)
-				return
-			}
 			if len(finalConfig.AllowHeaders) > 0 {
 				w.SetHeader("Access-Control-Allow-Origin", strings.Join(finalConfig.AllowHeaders, ","))
 			} else {
@@ -47,6 +43,10 @@ func CORS(config ...CORSConfig) deer.Middleware {
 			}
 			if finalConfig.AllowCredentials {
 				w.SetHeader("Access-Control-Allow-Credentials", "true")
+			}
+			if r.Method() != http.MethodOptions {
+				h.ServeHTTP(w.Raw, r.Raw)
+				return
 			}
 		})
 	}
