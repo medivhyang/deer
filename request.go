@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"net/http"
+	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -322,4 +325,59 @@ func (r *Request) BindWithJSON(value interface{}) error {
 
 func (r *Request) BindWithXML(value interface{}) error {
 	return xml.NewDecoder(r.Raw.Body).Decode(value)
+}
+
+func (r *Request) BindWithQuery(target interface{}) error {
+	return bindWithValues(r.Raw.URL.Query(), target)
+}
+
+func (r *Request) BindWithPostForm(target interface{}) error{
+	return bindWithValues(r.Raw.PostForm, target)
+}
+
+func bindWithValues(source url.Values, target interface{}) error{
+	reflectTargetValue := reflect.ValueOf(target)
+	for reflectTargetValue.Kind() == reflect.Ptr {
+		reflectTargetValue = reflectTargetValue.Elem()
+	}
+	if reflectTargetValue.Kind() != reflect.Struct {
+		return errors.New("deer: require struct type")
+	}
+	for i := 0; i < reflectTargetValue.NumField(); i++ {
+		var (
+			fieldValue = reflectTargetValue.Field(i)
+			fieldType = reflectTargetValue.Type().Field(i)
+			filedName = fieldType.Name
+		)
+		switch fieldValue.Kind() {
+		case reflect.String:
+			fieldValue.SetString(source.Get(filedName))
+		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
+			i64, err := strconv.ParseInt(source.Get(filedName), 10, 64)
+			if err != nil {
+				return err
+			}
+			fieldValue.SetInt(i64)
+		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+			i64, err := strconv.ParseUint(source.Get(filedName), 10, 64)
+			if err != nil {
+				return err
+			}
+			fieldValue.SetUint(i64)
+		case reflect.Float32, reflect.Float64:
+			f64, err := strconv.ParseFloat(source.Get(filedName), 64)
+			if err != nil {
+				return err
+			}
+			fieldValue.SetFloat(f64)
+		case reflect.Bool:
+			b, err := strconv.ParseBool(source.Get(filedName))
+			if err != nil {
+				return err
+			}
+			fieldValue.SetBool(b)
+		default:
+		}
+	}
+	return nil
 }
