@@ -2,11 +2,10 @@ package middlewares
 
 import (
 	"fmt"
-	"github.com/medivhyang/deer"
 	"net/http"
 )
 
-func BasicAuth(pairs map[string]string, realm ...string) deer.Middleware {
+func BasicAuth(pairs map[string]string, realm ...string) Middleware {
 	return BasicAuthWithFunc(func(username, password string) bool {
 		for k, v := range pairs {
 			if username == k && password == v {
@@ -17,7 +16,7 @@ func BasicAuth(pairs map[string]string, realm ...string) deer.Middleware {
 	}, realm...)
 }
 
-func BasicAuthWithFunc(f func(username, password string) bool, realm ...string) deer.Middleware {
+func BasicAuthWithFunc(f func(username, password string) bool, realm ...string) Middleware {
 	if f == nil {
 		panic("basic auth with func: require func")
 	}
@@ -28,16 +27,16 @@ func BasicAuthWithFunc(f func(username, password string) bool, realm ...string) 
 		finalRealm = ""
 	}
 	return func(h http.Handler) http.Handler {
-		return deer.HandlerFunc(func(w *deer.ResponseWriter, r *deer.Request) {
-			username, password, ok := r.Raw.BasicAuth()
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			username, password, ok := r.BasicAuth()
 			if ok {
 				if f(username, password) {
-					h.ServeHTTP(w.Raw, r.Raw)
+					h.ServeHTTP(w, r)
 					return
 				}
 			}
-			w.SetHeader("WWW-Authenticate", fmt.Sprintf("Basic realm=%q", finalRealm))
-			w.SetStatusCode(http.StatusUnauthorized)
+			w.Header().Set("WWW-Authenticate", fmt.Sprintf("Basic realm=%q", finalRealm))
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		})
 	}
