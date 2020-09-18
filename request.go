@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"github.com/medivhyang/deer/binding"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -328,14 +329,24 @@ func (r *Request) BindWithXML(value interface{}) error {
 }
 
 func (r *Request) BindWithQuery(target interface{}) error {
-	return bindWithValues(r.Raw.URL.Query(), target)
+	return binding.BindWithQuery(target, r.Raw.URL.Query())
 }
 
-func (r *Request) BindWithPostForm(target interface{}) error{
-	return bindWithValues(r.Raw.PostForm, target)
+func (r *Request) BindWithPostForm(target interface{}) error {
+	if err := r.Raw.ParseForm(); err != nil {
+		return err
+	}
+	return binding.BindWithPostForm(target, r.Raw.PostForm)
 }
 
-func bindWithValues(source url.Values, target interface{}) error{
+func (r *Request) BindWithForm(target interface{}) error {
+	if err := r.Raw.ParseForm(); err != nil {
+		return err
+	}
+	return binding.BindWithForm(target, r.Raw.Form)
+}
+
+func bindWithValues(source url.Values, target interface{}) error {
 	reflectTargetValue := reflect.ValueOf(target)
 	for reflectTargetValue.Kind() == reflect.Ptr {
 		reflectTargetValue = reflectTargetValue.Elem()
@@ -346,8 +357,8 @@ func bindWithValues(source url.Values, target interface{}) error{
 	for i := 0; i < reflectTargetValue.NumField(); i++ {
 		var (
 			fieldValue = reflectTargetValue.Field(i)
-			fieldType = reflectTargetValue.Type().Field(i)
-			filedName = fieldType.Name
+			fieldType  = reflectTargetValue.Type().Field(i)
+			filedName  = fieldType.Name
 		)
 		switch fieldValue.Kind() {
 		case reflect.String:
