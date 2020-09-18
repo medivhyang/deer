@@ -317,11 +317,11 @@ func (r *Request) FormTimeUnix(key string) (time.Time, error) {
 	return time.Unix(sec, 0), nil
 }
 
-func (r *Request) BindWithJSON(value interface{}) error {
+func (r *Request) DecodeJSONBody(value interface{}) error {
 	return json.NewDecoder(r.Raw.Body).Decode(value)
 }
 
-func (r *Request) BindWithXML(value interface{}) error {
+func (r *Request) DecodeXMLBody(value interface{}) error {
 	return xml.NewDecoder(r.Raw.Body).Decode(value)
 }
 
