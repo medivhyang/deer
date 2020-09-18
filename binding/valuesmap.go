@@ -12,11 +12,7 @@ func BindWithValuesMap(ptr interface{}, m map[string][]string, tag string) (bool
 type valuesMap map[string][]string
 
 func (m valuesMap) TrySet(value reflect.Value, structField reflect.StructField, name string, options settingOptions) (bool, error) {
-	return setByValuesMap(value, structField, m, name, options)
-}
-
-func setByValuesMap(value reflect.Value, structField reflect.StructField, form map[string][]string, name string, options settingOptions) (isSetted bool, err error) {
-	items, ok := form[name]
+	items, ok := m[name]
 	if !ok && !options.hasDefault {
 		return false, nil
 	}

@@ -22,8 +22,10 @@ func mapping(value reflect.Value, structField reflect.StructField, setter setter
 	if structField.Tag.Get(tag) == "-" {
 		return false, nil
 	}
-	switch value.Kind() {
-	case reflect.Ptr:
+
+	kind := value.Kind()
+
+	if kind == reflect.Ptr {
 		var (
 			isNew bool
 			ptr   = value
@@ -40,7 +42,19 @@ func mapping(value reflect.Value, structField reflect.StructField, setter setter
 			value.Set(ptr)
 		}
 		return isSetted, nil
-	case reflect.Struct:
+	}
+
+	if kind != reflect.Struct || !structField.Anonymous {
+		ok, err := trySetValue(value, structField, setter, tag)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+
+	if kind == reflect.Struct {
 		var (
 			typo     = value.Type()
 			isSetted bool
@@ -57,31 +71,31 @@ func mapping(value reflect.Value, structField reflect.StructField, setter setter
 			isSetted = isSetted || ok
 		}
 		return isSetted, nil
-	default:
-		if structField.Anonymous {
-			break
-		}
-		tagValue, opts := head(structField.Tag.Get(tag), ",")
-		if tagValue == "" {
-			tagValue = toSnake(structField.Name)
-		}
-		if tagValue == "" {
-			return false, nil
-		}
-		var (
-			setOpts settingOptions
-			opt     string
-		)
-		for len(opts) > 0 {
-			opt, opts = head(opts, ",")
-			if k, v := head(opt, "="); k == "default" {
-				setOpts.hasDefault = true
-				setOpts.defaultValue = v
-			}
-		}
-		return setter.TrySet(value, structField, tagValue, setOpts)
 	}
+
 	return false, nil
+}
+
+func trySetValue(value reflect.Value, structField reflect.StructField, setter setter, tag string) (bool, error) {
+	name, opts := head(structField.Tag.Get(tag), ",")
+	if name == "" {
+		name = toSnake(structField.Name)
+	}
+	if name == "" {
+		return false, nil
+	}
+	var (
+		setOpts settingOptions
+		opt     string
+	)
+	for len(opts) > 0 {
+		opt, opts = head(opts, ",")
+		if k, v := head(opt, "="); k == "default" {
+			setOpts.hasDefault = true
+			setOpts.defaultValue = v
+		}
+	}
+	return setter.TrySet(value, structField, name, setOpts)
 }
 
 func setBaseField(field reflect.Value, value string, structField reflect.StructField) error {
