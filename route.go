@@ -131,7 +131,7 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	regexpMatch := false
 	if e == nil {
 		for _, v := range router.entries {
-			if v.regexpMatch(path) {
+			if v.regexpMatch(path) && (v.method == "" || v.method == method) {
 				regexpMatch = true
 				e = v
 				break
