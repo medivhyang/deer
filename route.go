@@ -87,9 +87,6 @@ func (router *Router) Use(middlewares ...Middleware) *Router {
 }
 
 func (router *Router) Handle(method string, path string, handler http.Handler, middlewares ...Middleware) *Router {
-	if method != http.MethodOptions {
-		router.handle(http.MethodOptions, path, HandlerFunc(OK), middlewares...)
-	}
 	router.handle(method, path, handler, middlewares...)
 	return router
 }
@@ -130,13 +127,17 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	e := router.entryMap[k]
 	if e == nil {
+		k.method = http.MethodOptions
+		e = router.entryMap[k]
+	}
+	if e == nil {
 		k.method = ""
 		e = router.entryMap[k]
 	}
 	regexpMatch := false
 	if e == nil {
 		for _, v := range router.entries {
-			if v.regexpMatch(path) && (v.method == "" || v.method == method) {
+			if v.regexpMatch(path) && (v.method == "" || v.method == http.MethodOptions || v.method == method) {
 				regexpMatch = true
 				e = v
 				break
