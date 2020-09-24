@@ -88,7 +88,7 @@ func (router *Router) Use(middlewares ...Middleware) *Router {
 
 func (router *Router) Handle(method string, path string, handler http.Handler, middlewares ...Middleware) *Router {
 	if method != http.MethodOptions {
-		router.handle(method, path, HandlerFunc(OK), middlewares...)
+		router.handle(http.MethodOptions, path, HandlerFunc(OK), middlewares...)
 	}
 	router.handle(method, path, handler, middlewares...)
 	return router
@@ -108,9 +108,6 @@ func (router *Router) handle(method string, path string, handler http.Handler, m
 	}
 	if router.entryMap == nil {
 		router.entryMap = map[key]*entry{}
-	}
-	if _, ok := router.entryMap[k]; ok {
-		panic(fmt.Sprintf("deer: route \"%s %s\" has registered", method, method))
 	}
 	router.entryMap[k] = &e
 	router.entries = appendSorted(router.entries, &e)
