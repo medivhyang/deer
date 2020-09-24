@@ -87,6 +87,14 @@ func (router *Router) Use(middlewares ...Middleware) *Router {
 }
 
 func (router *Router) Handle(method string, path string, handler http.Handler, middlewares ...Middleware) *Router {
+	if method != http.MethodOptions {
+		router.handle(method, path, HandlerFunc(OK), middlewares...)
+	}
+	router.handle(method, path, handler, middlewares...)
+	return router
+}
+
+func (router *Router) handle(method string, path string, handler http.Handler, middlewares ...Middleware) *Router {
 	path = normalizePath(path)
 	e := entry{
 		method:      method,
