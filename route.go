@@ -127,20 +127,24 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	e := router.entryMap[k]
 	if e == nil {
-		k.method = http.MethodOptions
-		e = router.entryMap[k]
-	}
-	if e == nil {
 		k.method = ""
 		e = router.entryMap[k]
 	}
 	regexpMatch := false
 	if e == nil {
 		for _, v := range router.entries {
-			if v.regexpMatch(path) && (v.method == "" || v.method == http.MethodOptions || v.method == method) {
+			if v.regexpMatch(path) && (v.method == "" || v.method == method) {
 				regexpMatch = true
 				e = v
 				break
+			}
+		}
+	}
+	if e == nil {
+		if method == http.MethodOptions {
+			e = &entry{
+				pattern: path,
+				handler: HandlerFunc(OK),
 			}
 		}
 	}
