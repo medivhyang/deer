@@ -310,8 +310,9 @@ func Chain(h http.Handler, middlewares ...Middleware) http.Handler {
 }
 
 type group struct {
-	router *Router
-	prefix string
+	router      *Router
+	prefix      string
+	middlewares []Middleware
 }
 
 func (g *group) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -320,12 +321,19 @@ func (g *group) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (g *group) Handle(method string, path string, handler http.Handler, middlewares ...Middleware) *group {
 	path = g.prefix + path
-	g.router.Handle(method, path, handler, middlewares...)
+	finalMiddlewares := append([]Middleware{}, middlewares...)
+	finalMiddlewares = append(finalMiddlewares, g.middlewares...)
+	g.router.Handle(method, path, handler, finalMiddlewares...)
 	return g
 }
 
 func (g *group) Group(prefix string) *group {
 	return &group{router: g.router, prefix: g.prefix + normalizePrefix(prefix)}
+}
+
+func (g *group) Use(middlewares ...Middleware) *group {
+	g.middlewares = append(g.middlewares, middlewares...)
+	return g
 }
 
 func (g *group) Any(pattern string, handler http.Handler, middlewares ...Middleware) *group {
