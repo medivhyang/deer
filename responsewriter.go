@@ -43,7 +43,7 @@ func (w *ResponseWriter) HTML(statusCode int, content string) {
 func (w *ResponseWriter) JSON(statusCode int, value interface{}) {
 	w.Raw.Header().Set("Content-Type", "application/json")
 	w.Raw.WriteHeader(statusCode)
-	if  err := json.NewEncoder(w.Raw).Encode(value); err != nil {
+	if err := json.NewEncoder(w.Raw).Encode(value); err != nil {
 		http.Error(w.Raw, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -58,4 +58,8 @@ func (w *ResponseWriter) XML(statusCode int, value interface{}) {
 
 func (w *ResponseWriter) Error(statusCode int, error string) {
 	http.Error(w.Raw, error, statusCode)
+}
+
+func (w *ResponseWriter) OK() {
+	w.Text(http.StatusOK, http.StatusText(http.StatusOK))
 }
