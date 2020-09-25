@@ -230,7 +230,6 @@ func (s sortedEntrySlice) Swap(i, j int) {
 
 func (router *Router) String() string {
 	builder := bytes.Buffer{}
-	builder.WriteString("---\n")
 
 	sorted := append([]*entry{}, router.entries...)
 	sort.Sort(sortedEntrySlice(sorted))
@@ -243,7 +242,7 @@ func (router *Router) String() string {
 		pattern = router.prefix + pattern
 		builder.WriteString(fmt.Sprintf("%-7s %s\n", method, pattern))
 	}
-	builder.WriteString("---\n")
+
 	return builder.String()
 }
 
