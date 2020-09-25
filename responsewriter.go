@@ -60,6 +60,10 @@ func (w *ResponseWriter) Error(statusCode int, error string) {
 	http.Error(w.Raw, error, statusCode)
 }
 
-func (w *ResponseWriter) OK() {
-	w.Text(http.StatusOK, http.StatusText(http.StatusOK))
+func (w *ResponseWriter) JSONOK() {
+	w.JSON(http.StatusOK, http.StatusText(http.StatusOK))
+}
+
+func (w *ResponseWriter) TextOK() {
+	w.JSON(http.StatusOK, http.StatusText(http.StatusOK))
 }
