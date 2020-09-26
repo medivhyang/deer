@@ -13,7 +13,7 @@ func Timing(callback ...func(d time.Duration, w *deer.ResponseWriter, r *deer.Re
 	}
 	if f == nil {
 		f = func(d time.Duration, w *deer.ResponseWriter, r *deer.Request) {
-			log.Printf("timing: \"%s %s\" cost %s\n", r.Method, r.Path(), d)
+			log.Printf("timing: \"%s %s\" cost %s\n", r.Method(), r.Path(), d)
 		}
 	}
 	return func(h deer.HandlerFunc) deer.HandlerFunc {
