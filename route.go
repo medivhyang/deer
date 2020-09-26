@@ -10,14 +10,12 @@ import (
 	"strings"
 )
 
-type Middleware = func(http.Handler) http.Handler
-
 type Router struct {
 	prefix          string
 	entryMap        map[key]*entry
 	entries         []*entry
 	middlewares     []Middleware
-	notFoundHandler http.Handler
+	notFoundHandler HandlerFunc
 }
 
 type key struct {
@@ -28,7 +26,7 @@ type key struct {
 type entry struct {
 	method      string
 	pattern     string
-	handler     http.Handler
+	handler     HandlerFunc
 	middlewares []Middleware
 	regexp      *regexp.Regexp
 }
@@ -76,7 +74,7 @@ func (router *Router) Prefix(p string) *Router {
 	return router
 }
 
-func (router *Router) HandleNotFound(h http.Handler) *Router {
+func (router *Router) HandleNotFound(h HandlerFunc) *Router {
 	router.notFoundHandler = h
 	return router
 }
@@ -86,12 +84,12 @@ func (router *Router) Use(middlewares ...Middleware) *Router {
 	return router
 }
 
-func (router *Router) Handle(method string, path string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) Handle(method string, path string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	router.handle(method, path, handler, middlewares...)
 	return router
 }
 
-func (router *Router) handle(method string, path string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) handle(method string, path string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	path = normalizePath(path)
 	e := entry{
 		method:      method,
@@ -163,31 +161,31 @@ func (router *Router) Group(prefix string) *group {
 	return &group{router: router, prefix: normalizePrefix(prefix)}
 }
 
-func (router *Router) Any(pattern string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) Any(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	return router.Handle("", pattern, handler, middlewares...)
 }
 
-func (router *Router) Get(pattern string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) Get(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	return router.Handle(http.MethodGet, pattern, handler, middlewares...)
 }
 
-func (router *Router) Post(pattern string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) Post(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	return router.Handle(http.MethodPost, pattern, handler, middlewares...)
 }
 
-func (router *Router) Put(pattern string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) Put(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	return router.Handle(http.MethodPut, pattern, handler, middlewares...)
 }
 
-func (router *Router) Patch(pattern string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) Patch(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	return router.Handle(http.MethodPatch, pattern, handler, middlewares...)
 }
 
-func (router *Router) Delete(pattern string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) Delete(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	return router.Handle(http.MethodDelete, pattern, handler, middlewares...)
 }
 
-func (router *Router) Options(pattern string, handler http.Handler, middlewares ...Middleware) *Router {
+func (router *Router) Options(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	return router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 
@@ -299,10 +297,10 @@ func appendSorted(es []*entry, e *entry) []*entry {
 	return es
 }
 
-func Chain(h http.Handler, middlewares ...Middleware) http.Handler {
+func Chain(h HandlerFunc, middlewares ...Middleware) HandlerFunc {
 	for _, m := range middlewares {
 		if m != nil {
-			h = m(h)
+			h = WrapHandlerFunc(m(h).ServeHTTP)
 		}
 	}
 	return h
@@ -318,7 +316,7 @@ func (g *group) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	g.router.ServeHTTP(w, r)
 }
 
-func (g *group) Handle(method string, path string, handler http.Handler, middlewares ...Middleware) *group {
+func (g *group) Handle(method string, path string, handler HandlerFunc, middlewares ...Middleware) *group {
 	path = g.prefix + path
 	finalMiddlewares := append([]Middleware{}, middlewares...)
 	finalMiddlewares = append(finalMiddlewares, g.middlewares...)
@@ -335,31 +333,31 @@ func (g *group) Use(middlewares ...Middleware) *group {
 	return g
 }
 
-func (g *group) Any(pattern string, handler http.Handler, middlewares ...Middleware) *group {
+func (g *group) Any(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle("", pattern, handler, middlewares...)
 }
 
-func (g *group) Get(pattern string, handler http.Handler, middlewares ...Middleware) *group {
+func (g *group) Get(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle(http.MethodGet, pattern, handler, middlewares...)
 }
 
-func (g *group) Post(pattern string, handler http.Handler, middlewares ...Middleware) *group {
+func (g *group) Post(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle(http.MethodPost, pattern, handler, middlewares...)
 }
 
-func (g *group) Put(pattern string, handler http.Handler, middlewares ...Middleware) *group {
+func (g *group) Put(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle(http.MethodPut, pattern, handler, middlewares...)
 }
 
-func (g *group) Patch(pattern string, handler http.Handler, middlewares ...Middleware) *group {
+func (g *group) Patch(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle(http.MethodPatch, pattern, handler, middlewares...)
 }
 
-func (g *group) Delete(pattern string, handler http.Handler, middlewares ...Middleware) *group {
+func (g *group) Delete(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle(http.MethodDelete, pattern, handler, middlewares...)
 }
 
-func (g *group) Options(pattern string, handler http.Handler, middlewares ...Middleware) *group {
+func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
-	"github.com/medivhyang/deer/binding"
+	"github.com/medivhyang/deer/internal/binding"
 	"net/http"
 )
 
