@@ -60,6 +60,10 @@ func (r *Request) Cookie(key string) (string, error) {
 	return cookie.Value, nil
 }
 
+func (r *Request) SetCooke(cookie *http.Cookie) {
+	r.Raw.AddCookie(cookie)
+}
+
 func (r *Request) CookieOrDefault(key string, defaultValue ...string) string {
 	cookie, err := r.Raw.Cookie(key)
 	if err != nil {
