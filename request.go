@@ -52,6 +52,39 @@ func (r *Request) SetHeader(key string, value string) {
 	r.Raw.Header.Set(key, value)
 }
 
+func (r *Request) Cookie(key string) (string, error) {
+	cookie, err := r.Raw.Cookie(key)
+	if err != nil {
+		return "", err
+	}
+	return cookie.Value, nil
+}
+
+func (r *Request) CookieOrDefault(key string, defaultValue ...string) string {
+	cookie, err := r.Raw.Cookie(key)
+	if err != nil {
+		if err == http.ErrNoCookie {
+			if len(defaultValue) > 0 {
+				return defaultValue[0]
+			}
+			return ""
+		}
+		panic(err)
+	}
+	return cookie.Value
+}
+
+func (r *Request) ExistsCookie(key string) bool {
+	_, err := r.Raw.Cookie(key)
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return false
+		}
+		panic(err)
+	}
+	return true
+}
+
 func (r *Request) PathParam(key string) string {
 	if r.pathParams == nil {
 		r.pathParams = PathParams(r.Raw)
