@@ -157,8 +157,8 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.ServeHTTP(w, r)
 }
 
-func (router *Router) Group(prefix string) *group {
-	return &group{router: router, prefix: normalizePrefix(prefix)}
+func (router *Router) Group(prefix string, middlewares ...Middleware) *group {
+	return &group{router: router, prefix: normalizePrefix(prefix), middlewares: middlewares}
 }
 
 func (router *Router) Any(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
