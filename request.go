@@ -188,3 +188,11 @@ func (r *Request) BindWithForm(target interface{}) error {
 	}
 	return binding.BindWithForm(target, r.Raw.Form)
 }
+
+func (r *Request) BasicAuth() (username string, password string, ok bool) {
+	return r.Raw.BasicAuth()
+}
+
+func (r *Request) SetBasicAuth(username string, password string) {
+	r.Raw.SetBasicAuth(username, password)
+}
