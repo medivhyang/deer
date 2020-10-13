@@ -65,7 +65,7 @@ func trPathPatternToRegexpPattern(pattern string) string {
 	return s
 }
 
-func New() *Router {
+func NewRouter() *Router {
 	return &Router{}
 }
 

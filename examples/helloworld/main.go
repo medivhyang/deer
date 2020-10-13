@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	d := deer.New().Use(middlewares.Trace())
+	d := deer.NewRouter().Use(middlewares.Trace())
 
 	d.Get("/", func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")

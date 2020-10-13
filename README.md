@@ -25,7 +25,7 @@ import (
 )
 
 func main() {
-	d := deer.New().Use(middlewares.Trace())
+	d := deer.NewRouter().Use(middlewares.Trace())
 
 	d.Get("/", func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")
@@ -39,7 +39,7 @@ Demo path params usage:
 
 ```go
 func main() {
-	d := deer.New().Use(middlewares.Trace())
+	d := deer.NewRouter().Use(middlewares.Trace())
 
 	d.Get("/orgs/:oid", func(w *deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("oid = %s", r.PathParam("oid")))
