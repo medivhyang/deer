@@ -146,7 +146,12 @@ func (b *requestBuilder) Options(path string) *requestBuilder {
 	return b
 }
 
-func (b *requestBuilder) Query(q map[string]string) *requestBuilder {
+func (b *requestBuilder) Query(k, v string) *requestBuilder {
+	b.query[k] = v
+	return b
+}
+
+func (b *requestBuilder) Queries(q map[string]string) *requestBuilder {
 	if b.query == nil {
 		b.query = map[string]string{}
 	}
@@ -156,7 +161,12 @@ func (b *requestBuilder) Query(q map[string]string) *requestBuilder {
 	return b
 }
 
-func (b *requestBuilder) Header(h map[string]string) *requestBuilder {
+func (b *requestBuilder) Header(k, v string) *requestBuilder {
+	b.header[k] = v
+	return b
+}
+
+func (b *requestBuilder) Headers(h map[string]string) *requestBuilder {
 	if b.header == nil {
 		b.header = map[string]string{}
 	}
@@ -269,21 +279,6 @@ func (b *requestBuilder) Write(writer io.Writer) error {
 
 func (b *requestBuilder) WriteFile(filename string) error {
 	return b.Do().WriteFile(filename)
-}
-
-func (b *requestBuilder) New() *requestBuilder {
-	result := *b
-	result.header = map[string]string{}
-	for k, v := range b.header {
-		result.header[k] = v
-	}
-	result.query = map[string]string{}
-	for k, v := range b.header {
-		result.query[k] = v
-	}
-	result.body = nil
-	result.err = nil
-	return &result
 }
 
 func (b *requestBuilder) url() string {

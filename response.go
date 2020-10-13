@@ -189,3 +189,27 @@ func (r *errResponse) BindWithJSON(value interface{}) error {
 func (r *errResponse) BindWithXML(value interface{}) error {
 	return r.err
 }
+
+func (r *errResponse) JSON(value interface{}) error {
+	return r.err
+}
+
+func (r *errResponse) XML(value interface{}) error {
+	return r.err
+}
+
+func (r *errResponse) Write(writer io.Writer) error {
+	return r.err
+}
+
+func (r *errResponse) WriteFile(filename string) error {
+	return r.err
+}
+
+func (r *errResponse) Dump(body bool) ([]byte, error) {
+	return nil, r.err
+}
+
+func (r *errResponse) Copy() Response {
+	return ErrorResponse(r.err)
+}
