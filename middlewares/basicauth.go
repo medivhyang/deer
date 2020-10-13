@@ -28,11 +28,11 @@ func BasicAuthWithFunc(f func(username, password string) bool, realm ...string) 
 		finalRealm = ""
 	}
 	return func(h deer.HandlerFunc) deer.HandlerFunc {
-		return func(w *deer.ResponseWriter, r *deer.Request) {
+		return func(w deer.ResponseWriter, r *deer.Request) {
 			username, password, ok := r.Raw.BasicAuth()
 			if ok {
 				if f(username, password) {
-					h.ServeHTTP(w.Raw, r.Raw)
+					h.ServeHTTP(w.Raw(), r.Raw)
 					return
 				}
 			}

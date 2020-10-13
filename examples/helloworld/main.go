@@ -10,7 +10,7 @@ import (
 func main() {
 	d := deer.NewRouter().Use(middlewares.Trace())
 
-	d.Get("/", func(w *deer.ResponseWriter, r *deer.Request) {
+	d.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")
 	})
 

@@ -27,7 +27,7 @@ import (
 func main() {
 	d := deer.NewRouter().Use(middlewares.Trace())
 
-	d.Get("/", func(w *deer.ResponseWriter, r *deer.Request) {
+	d.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")
 	})
 
@@ -41,13 +41,13 @@ Demo path params usage:
 func main() {
 	d := deer.NewRouter().Use(middlewares.Trace())
 
-	d.Get("/orgs/:oid", func(w *deer.ResponseWriter, r *deer.Request) {
+	d.Get("/orgs/:oid", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("oid = %s", r.PathParam("oid")))
 	})
-	d.Get("/orgs/:oid/users/:uid", func(w *deer.ResponseWriter, r *deer.Request) {
+	d.Get("/orgs/:oid/users/:uid", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("oid = %s, uid = %s", r.PathParam("oid"), r.PathParam("uid")))
 	})
-	d.Get("/files/*filename", func(w *deer.ResponseWriter, r *deer.Request) {
+	d.Get("/files/*filename", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("filename = %s", r.PathParam("filename")))
 	})
 

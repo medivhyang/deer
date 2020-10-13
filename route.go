@@ -142,7 +142,7 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if method == http.MethodOptions {
 			e = &entry{
 				pattern: path,
-				handler: HandlerFunc(func(w *ResponseWriter, r *Request) {}),
+				handler: func(w ResponseWriter, r *Request) {},
 			}
 		}
 	}
