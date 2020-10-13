@@ -9,12 +9,12 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h HandlerFunc) Next(w ResponseWriter, r *Request) {
-	h.ServeHTTP(w.Raw(), r.Raw)
+	h.ServeHTTP(w.Raw(), r.raw)
 }
 
 func WrapHandlerFunc(h http.HandlerFunc) HandlerFunc {
 	return func(w ResponseWriter, r *Request) {
-		h.ServeHTTP(w.Raw(), r.Raw)
+		h.ServeHTTP(w.Raw(), r.raw)
 	}
 }
 
@@ -26,7 +26,7 @@ func UnwrapHandlerFunc(h HandlerFunc) http.HandlerFunc {
 
 func WrapHandler(h http.Handler) HandlerFunc {
 	return func(w ResponseWriter, r *Request) {
-		h.ServeHTTP(w.Raw(), r.Raw)
+		h.ServeHTTP(w.Raw(), r.raw)
 	}
 }
 

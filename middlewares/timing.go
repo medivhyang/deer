@@ -22,7 +22,7 @@ func Timing(callback ...func(d time.Duration, w deer.ResponseWriter, r *deer.Req
 				d := time.Since(start)
 				f(d, w, r)
 			}(time.Now())
-			h.ServeHTTP(w.Raw(), r.Raw)
+			h.ServeHTTP(w.Raw(), r.Raw())
 		}
 	}
 }

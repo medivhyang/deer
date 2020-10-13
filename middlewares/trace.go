@@ -18,7 +18,7 @@ func Trace(callback ...func(w deer.ResponseWriter, r *deer.Request)) deer.Middle
 	return func(h deer.HandlerFunc) deer.HandlerFunc {
 		return func(w deer.ResponseWriter, r *deer.Request) {
 			f(w, r)
-			h.ServeHTTP(w.Raw(), r.Raw)
+			h.ServeHTTP(w.Raw(), r.Raw())
 		}
 	}
 }

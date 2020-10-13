@@ -27,7 +27,7 @@ func Recovery(callback ...func(err interface{}, w deer.ResponseWriter, r *deer.R
 					f(err, w, r)
 				}
 			}()
-			h.ServeHTTP(w.Raw(), r.Raw)
+			h.ServeHTTP(w.Raw(), r.Raw())
 		}
 	}
 }

@@ -45,7 +45,7 @@ func CORS(config ...CORSConfig) deer.Middleware {
 				w.SetHeader("Access-Control-Allow-Credentials", "true")
 			}
 			if r.Method() != http.MethodOptions {
-				h.ServeHTTP(w.Raw(), r.Raw)
+				h.ServeHTTP(w.Raw(), r.Raw())
 				return
 			}
 		}
