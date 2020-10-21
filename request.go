@@ -159,7 +159,7 @@ func (r *Request) FormValue(key string) string {
 	return r.raw.FormValue(key)
 }
 
-func (r *Request) FormExists(key string) bool {
+func (r *Request) ExistsForm(key string) bool {
 	_ = r.raw.ParseForm()
 	if r.raw.Form == nil {
 		return false
