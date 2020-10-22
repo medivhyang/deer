@@ -209,11 +209,6 @@ var sortMethods = map[string]int{
 }
 
 func (s sortedEntrySlice) Less(i, j int) bool {
-	ci := len(strings.Split(s[i].pattern, "/"))
-	cj := len(strings.Split(s[j].pattern, "/"))
-	if ci != cj {
-		return ci < cj
-	}
 	if s[i].pattern != s[j].pattern {
 		return s[i].pattern < s[j].pattern
 	}
@@ -241,7 +236,7 @@ func (router *Router) String() string {
 		builder.WriteString(fmt.Sprintf("%-7s %s\n", method, pattern))
 	}
 
-	return builder.String()
+	return strings.TrimSuffix(builder.String(), "\n")
 }
 
 func (router *Router) Run(addr string) error {
