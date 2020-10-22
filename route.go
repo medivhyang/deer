@@ -189,6 +189,11 @@ func (router *Router) Options(pattern string, handler HandlerFunc, middlewares .
 	return router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 
+type View struct {
+	Method  string `json:"method"`
+	Pattern string `json:"pattern"`
+}
+
 type sortedEntrySlice []*entry
 
 func (s sortedEntrySlice) Len() int {
@@ -221,21 +226,30 @@ func (s sortedEntrySlice) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-func (router *Router) String() string {
-	builder := bytes.Buffer{}
-
-	sorted := append([]*entry{}, router.entries...)
-	sort.Sort(sortedEntrySlice(sorted))
-
-	for _, entry := range sorted {
+func (router *Router) Items() []View {
+	copies := append([]*entry{}, router.entries...)
+	sort.Sort(sortedEntrySlice(copies))
+	var result []View
+	for _, entry := range copies {
 		method, pattern := entry.method, entry.pattern
 		if method == "" {
 			method = "ANY"
 		}
 		pattern = router.prefix + pattern
-		builder.WriteString(fmt.Sprintf("%-7s %s\n", method, pattern))
+		result = append(result, View{
+			Method:  method,
+			Pattern: pattern,
+		})
 	}
+	return result
+}
 
+func (router *Router) String() string {
+	builder := bytes.Buffer{}
+	items := router.Items()
+	for _, item := range items {
+		builder.WriteString(fmt.Sprintf("%-7s %s\n", item.Method, item.Pattern))
+	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
 
