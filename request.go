@@ -26,7 +26,7 @@ func (r *Request) Context() context.Context {
 }
 
 func (r *Request) SetContext(ctx context.Context) {
-	r.raw.WithContext(ctx)
+	r.raw = r.raw.WithContext(ctx)
 }
 
 func (r *Request) Method() string {
