@@ -309,7 +309,7 @@ func appendSorted(es []*entry, e *entry) []*entry {
 func Chain(h HandlerFunc, middlewares ...Middleware) HandlerFunc {
 	for _, m := range middlewares {
 		if m != nil {
-			h = WrapHandlerFunc(m(h).ServeHTTP)
+			h = WrapHandler(http.HandlerFunc(m(h).ServeHTTP))
 		}
 	}
 	return h
@@ -372,7 +372,7 @@ func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Midd
 
 var pathParamsContextKey = &struct{}{}
 
-func PathParams(r *http.Request) map[string]string {
+func Params(r *http.Request) map[string]string {
 	m, ok := r.Context().Value(pathParamsContextKey).(map[string]string)
 	if ok {
 		return m

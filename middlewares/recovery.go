@@ -8,13 +8,13 @@ import (
 	"runtime/debug"
 )
 
-func Recovery(callback ...func(err interface{}, w deer.ResponseWriter, r *deer.Request)) deer.Middleware {
-	var f func(err interface{}, w deer.ResponseWriter, r *deer.Request)
+func Recovery(callback ...func(w deer.ResponseWriter, r *deer.Request, err interface{})) deer.Middleware {
+	var f func(w deer.ResponseWriter, r *deer.Request,err interface{})
 	if len(callback) > 0 {
 		f = callback[0]
 	}
 	if f == nil {
-		f = func(err interface{}, w deer.ResponseWriter, r *deer.Request) {
+		f = func(w deer.ResponseWriter, r *deer.Request, err interface{}) {
 			log.Printf("deer: catch panic: %v\n", err)
 			log.Println(string(debug.Stack()))
 			http.Error(w.Raw(), fmt.Sprint(err), http.StatusInternalServerError)
@@ -24,7 +24,7 @@ func Recovery(callback ...func(err interface{}, w deer.ResponseWriter, r *deer.R
 		return func(w deer.ResponseWriter, r *deer.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					f(err, w, r)
+					f(w, r, err)
 				}
 			}()
 			h.ServeHTTP(w.Raw(), r.Raw())

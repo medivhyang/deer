@@ -13,8 +13,8 @@ func WrapRequest(r *http.Request) *Request {
 }
 
 type Request struct {
-	pathParams map[string]string
-	raw        *http.Request
+	params map[string]string
+	raw    *http.Request
 }
 
 func (r *Request) Raw() *http.Request {
@@ -23,6 +23,10 @@ func (r *Request) Raw() *http.Request {
 
 func (r *Request) Context() context.Context {
 	return r.raw.Context()
+}
+
+func (r *Request) SetContext(ctx context.Context) {
+	r.raw.WithContext(ctx)
 }
 
 func (r *Request) Method() string {
@@ -93,29 +97,29 @@ func (r *Request) ExistsCookie(key string) bool {
 	return true
 }
 
-func (r *Request) PathParam(key string) string {
-	if r.pathParams == nil {
-		r.pathParams = PathParams(r.raw)
+func (r *Request) Param(key string) string {
+	if r.params == nil {
+		r.params = Params(r.raw)
 	}
-	return r.pathParams[key]
+	return r.params[key]
 }
 
-func (r *Request) PathParamOrDefault(key string, value string) string {
-	if r.pathParams == nil {
-		r.pathParams = PathParams(r.raw)
+func (r *Request) ParamOrDefault(key string, value string) string {
+	if r.params == nil {
+		r.params = Params(r.raw)
 	}
-	result := r.pathParams[key]
+	result := r.params[key]
 	if result == "" {
 		return value
 	}
 	return result
 }
 
-func (r *Request) ExistsPathParam(key string) bool {
-	if r.pathParams == nil {
-		r.pathParams = PathParams(r.raw)
+func (r *Request) ExistsParam(key string) bool {
+	if r.params == nil {
+		r.params = Params(r.raw)
 	}
-	_, ok := r.pathParams[key]
+	_, ok := r.params[key]
 	return ok
 }
 

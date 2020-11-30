@@ -13,22 +13,33 @@ import (
 	"strings"
 )
 
-type requestBuilder struct {
-	client *http.Client
-	prefix string
-	method string
-	path   string
-	query  map[string]string
-	header map[string]string
-	body   io.Reader
-	err    error
+type RequestBuilder struct {
+	client  *http.Client
+	prefix  string
+	method  string
+	path    string
+	queries map[string]string
+	headers map[string]string
+	body    io.Reader
+	err     error
 }
 
-func NewBuilder() *requestBuilder {
-	return &requestBuilder{}
+type RequestTemplate struct {
+	Client  *http.Client
+	Prefix  string
+	Queries map[string]string
+	Headers map[string]string
 }
 
-func Get(path string) *requestBuilder {
+func (t *RequestTemplate) NewBuilder() *RequestBuilder {
+	return NewBuilder().Client(t.Client).Prefix(t.Prefix).Headers(t.Headers).Queries(t.Queries)
+}
+
+func NewBuilder() *RequestBuilder {
+	return &RequestBuilder{}
+}
+
+func Get(path string) *RequestBuilder {
 	return NewBuilder().Get(path)
 }
 
@@ -48,140 +59,136 @@ func GetStream(path string) (io.ReadCloser, error) {
 	return NewBuilder().GetStream(path)
 }
 
-func Post(path string) *requestBuilder {
+func Post(path string) *RequestBuilder {
 	return NewBuilder().Post(path)
 }
 
-func Put(path string) *requestBuilder {
+func Put(path string) *RequestBuilder {
 	return NewBuilder().Put(path)
 }
 
-func Delete(path string) *requestBuilder {
+func Delete(path string) *RequestBuilder {
 	return NewBuilder().Delete(path)
 }
 
-func Patch(path string) *requestBuilder {
+func Patch(path string) *RequestBuilder {
 	return NewBuilder().Patch(path)
 }
 
-func Options(path string) *requestBuilder {
+func Options(path string) *RequestBuilder {
 	return NewBuilder().Options(path)
 }
 
-func (b *requestBuilder) FromTemplate() {
-
-}
-
-func (b *requestBuilder) Client(client *http.Client) *requestBuilder {
+func (b *RequestBuilder) Client(client *http.Client) *RequestBuilder {
 	b.client = client
 	return b
 }
 
-func (b *requestBuilder) Prefix(p string) *requestBuilder {
+func (b *RequestBuilder) Prefix(p string) *RequestBuilder {
 	b.prefix = p
 	return b
 }
 
-func (b *requestBuilder) Get(path string) *requestBuilder {
+func (b *RequestBuilder) Get(path string) *RequestBuilder {
 	b.method = http.MethodGet
 	b.path = path
 	return b
 }
 
-func (b *requestBuilder) GetJSON(path string, result interface{}) error {
+func (b *RequestBuilder) GetJSON(path string, result interface{}) error {
 	return b.Get(path).JSON(result)
 }
 
-func (b *requestBuilder) GetText(path string) (string, error) {
+func (b *RequestBuilder) GetText(path string) (string, error) {
 	return b.Get(path).Text()
 }
 
-func (b *requestBuilder) GetFile(path string, filename string) error {
+func (b *RequestBuilder) GetFile(path string, filename string) error {
 	return b.Get(path).WriteFile(filename)
 }
 
-func (b *requestBuilder) GetStream(path string) (io.ReadCloser, error) {
+func (b *RequestBuilder) GetStream(path string) (io.ReadCloser, error) {
 	return b.Get(path).Stream()
 }
 
-func (b *requestBuilder) Post(path string) *requestBuilder {
+func (b *RequestBuilder) Post(path string) *RequestBuilder {
 	b.method = http.MethodPost
 	b.path = path
 	return b
 }
 
-func (b *requestBuilder) PostJSON(path string, body interface{}) *requestBuilder {
+func (b *RequestBuilder) PostJSON(path string, body interface{}) *RequestBuilder {
 	return b.Post(path).WithJSONBody(body)
 }
 
-func (b *requestBuilder) Put(path string) *requestBuilder {
+func (b *RequestBuilder) Put(path string) *RequestBuilder {
 	b.method = http.MethodPut
 	b.path = path
 	return b
 }
 
-func (b *requestBuilder) PutJSON(path string, body interface{}) *requestBuilder {
+func (b *RequestBuilder) PutJSON(path string, body interface{}) *RequestBuilder {
 	return b.Put(path).WithJSONBody(body)
 }
 
-func (b *requestBuilder) Delete(path string) *requestBuilder {
+func (b *RequestBuilder) Delete(path string) *RequestBuilder {
 	b.method = http.MethodDelete
 	b.path = path
 	return b
 }
 
-func (b *requestBuilder) Patch(path string) *requestBuilder {
+func (b *RequestBuilder) Patch(path string) *RequestBuilder {
 	b.method = http.MethodPatch
 	b.path = path
 	return b
 }
 
-func (b *requestBuilder) PatchJSON(path string, body interface{}) *requestBuilder {
+func (b *RequestBuilder) PatchJSON(path string, body interface{}) *RequestBuilder {
 	return b.Patch(path).WithJSONBody(body)
 }
 
-func (b *requestBuilder) Options(path string) *requestBuilder {
+func (b *RequestBuilder) Options(path string) *RequestBuilder {
 	b.method = http.MethodOptions
 	b.path = path
 	return b
 }
 
-func (b *requestBuilder) Query(k, v string) *requestBuilder {
-	b.query[k] = v
+func (b *RequestBuilder) Query(k, v string) *RequestBuilder {
+	b.queries[k] = v
 	return b
 }
 
-func (b *requestBuilder) Queries(q map[string]string) *requestBuilder {
-	if b.query == nil {
-		b.query = map[string]string{}
+func (b *RequestBuilder) Queries(m map[string]string) *RequestBuilder {
+	if b.queries == nil {
+		b.queries = map[string]string{}
 	}
-	for k, v := range q {
-		b.query[k] = v
-	}
-	return b
-}
-
-func (b *requestBuilder) Header(k, v string) *requestBuilder {
-	b.header[k] = v
-	return b
-}
-
-func (b *requestBuilder) Headers(h map[string]string) *requestBuilder {
-	if b.header == nil {
-		b.header = map[string]string{}
-	}
-	for k, v := range h {
-		b.header[k] = v
+	for k, v := range m {
+		b.queries[k] = v
 	}
 	return b
 }
 
-func (b *requestBuilder) WithTextBody(text string) *requestBuilder {
+func (b *RequestBuilder) Header(k, v string) *RequestBuilder {
+	b.headers[k] = v
+	return b
+}
+
+func (b *RequestBuilder) Headers(m map[string]string) *RequestBuilder {
+	if b.headers == nil {
+		b.headers = map[string]string{}
+	}
+	for k, v := range m {
+		b.headers[k] = v
+	}
+	return b
+}
+
+func (b *RequestBuilder) WithTextBody(text string) *RequestBuilder {
 	b.body = strings.NewReader(text)
 	return b
 }
 
-func (b *requestBuilder) WithJSONBody(v interface{}) *requestBuilder {
+func (b *RequestBuilder) WithJSONBody(v interface{}) *RequestBuilder {
 	bs, err := json.Marshal(v)
 	if err != nil {
 		b.err = err
@@ -191,7 +198,7 @@ func (b *requestBuilder) WithJSONBody(v interface{}) *requestBuilder {
 	return b
 }
 
-func (b *requestBuilder) WithXMLBody(v interface{}) *requestBuilder {
+func (b *RequestBuilder) WithXMLBody(v interface{}) *RequestBuilder {
 	bs, err := xml.Marshal(v)
 	if err != nil {
 		b.err = err
@@ -201,7 +208,7 @@ func (b *requestBuilder) WithXMLBody(v interface{}) *requestBuilder {
 	return b
 }
 
-func (b *requestBuilder) WithFile(filename string) *requestBuilder {
+func (b *RequestBuilder) WithFile(filename string) *RequestBuilder {
 	file, err := os.Open(filename)
 	if err != nil {
 		b.err = err
@@ -211,12 +218,12 @@ func (b *requestBuilder) WithFile(filename string) *requestBuilder {
 	return b
 }
 
-func (b *requestBuilder) WithBodyReader(r io.Reader) *requestBuilder {
+func (b *RequestBuilder) WithReaderBody(r io.Reader) *RequestBuilder {
 	b.body = r
 	return b
 }
 
-func (b *requestBuilder) Do(client ...*http.Client) Response {
+func (b *RequestBuilder) Do(client ...*http.Client) Response {
 	if b.err != nil {
 		return ErrorResponse(b.err)
 	}
@@ -234,7 +241,7 @@ func (b *requestBuilder) Do(client ...*http.Client) Response {
 		return ErrorResponse(err)
 	}
 
-	for k, v := range b.header {
+	for k, v := range b.headers {
 		request.Header.Set(k, v)
 	}
 
@@ -257,40 +264,40 @@ func (b *requestBuilder) Do(client ...*http.Client) Response {
 	return WrapResponse(response)
 }
 
-func (b *requestBuilder) Text() (string, error) {
+func (b *RequestBuilder) Text() (string, error) {
 	return b.Do().Text()
 }
 
-func (b *requestBuilder) JSON(value interface{}) error {
+func (b *RequestBuilder) JSON(value interface{}) error {
 	return b.Do().JSON(value)
 }
 
-func (b *requestBuilder) XML(value interface{}) error {
+func (b *RequestBuilder) XML(value interface{}) error {
 	return b.Do().XML(value)
 }
 
-func (b *requestBuilder) Stream() (io.ReadCloser, error) {
+func (b *RequestBuilder) Stream() (io.ReadCloser, error) {
 	return b.Do().Stream()
 }
 
-func (b *requestBuilder) Write(writer io.Writer) error {
+func (b *RequestBuilder) Write(writer io.Writer) error {
 	return b.Do().Write(writer)
 }
 
-func (b *requestBuilder) WriteFile(filename string) error {
+func (b *RequestBuilder) WriteFile(filename string) error {
 	return b.Do().WriteFile(filename)
 }
 
-func (b *requestBuilder) url() string {
+func (b *RequestBuilder) url() string {
 	s := b.prefix + b.path
 	if strings.Contains(s, "?") {
 		s += "&"
 	} else {
 		s += "?"
 	}
-	if len(b.query) > 0 {
+	if len(b.queries) > 0 {
 		vs := url.Values{}
-		for k, v := range b.query {
+		for k, v := range b.queries {
 			vs.Set(k, v)
 		}
 		s += vs.Encode()

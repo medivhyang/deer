@@ -10,16 +10,16 @@ import (
 )
 
 type setter interface {
-	TrySet(value reflect.Value, structField reflect.StructField, name string, options settingOptions) (bool, error)
+	TrySet(value reflect.Value, structField reflect.StructField, name string, options options) (bool, error)
 }
 
-type settingOptions struct {
+type options struct {
 	hasDefault   bool
 	defaultValue string
 }
 
-func mapping(value reflect.Value, structField reflect.StructField, setter setter, tag string) (bool, error) {
-	if structField.Tag.Get(tag) == "-" {
+func mapping(value reflect.Value, field reflect.StructField, setter setter, tag string) (bool, error) {
+	if field.Tag.Get(tag) == "-" {
 		return false, nil
 	}
 
@@ -34,18 +34,18 @@ func mapping(value reflect.Value, structField reflect.StructField, setter setter
 			isNew = true
 			ptr = reflect.New(value.Type().Elem())
 		}
-		isSetted, err := mapping(ptr.Elem(), structField, setter, tag)
+		isSet, err := mapping(ptr.Elem(), field, setter, tag)
 		if err != nil {
 			return false, err
 		}
-		if isNew && isSetted {
+		if isNew && isSet {
 			value.Set(ptr)
 		}
-		return isSetted, nil
+		return isSet, nil
 	}
 
-	if kind != reflect.Struct || !structField.Anonymous {
-		ok, err := trySetValue(value, structField, setter, tag)
+	if kind != reflect.Struct || !field.Anonymous {
+		ok, err := trySetValue(value, field, setter, tag)
 		if err != nil {
 			return false, err
 		}
@@ -56,8 +56,8 @@ func mapping(value reflect.Value, structField reflect.StructField, setter setter
 
 	if kind == reflect.Struct {
 		var (
-			typo     = value.Type()
-			isSetted bool
+			typo  = value.Type()
+			isSet bool
 		)
 		for i := 0; i < value.NumField(); i++ {
 			field := typo.Field(i)
@@ -68,9 +68,9 @@ func mapping(value reflect.Value, structField reflect.StructField, setter setter
 			if err != nil {
 				return false, err
 			}
-			isSetted = isSetted || ok
+			isSet = isSet || ok
 		}
-		return isSetted, nil
+		return isSet, nil
 	}
 
 	return false, nil
@@ -85,7 +85,7 @@ func trySetValue(value reflect.Value, structField reflect.StructField, setter se
 		return false, nil
 	}
 	var (
-		setOpts settingOptions
+		setOpts options
 		opt     string
 	)
 	for len(opts) > 0 {

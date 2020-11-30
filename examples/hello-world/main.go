@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	d := deer.NewRouter().Use(middlewares.Trace())
+	r := deer.NewRouter().Use(middlewares.Trace())
 
-	d.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
+	r.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")
 	})
 
-	d.Run(":8080")
+	r.Run(":8080")
 }

@@ -11,11 +11,4 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(text)
-	//demoGetFile()
-}
-
-func demoGetFile() {
-	if err := deer.GetFile("https://baidu.com", "baidu.html"); err != nil {
-		panic(err)
-	}
 }

@@ -11,7 +11,7 @@ func BindWithValuesMap(ptr interface{}, m map[string][]string, tag string) (bool
 
 type valuesMap map[string][]string
 
-func (m valuesMap) TrySet(value reflect.Value, structField reflect.StructField, name string, options settingOptions) (bool, error) {
+func (m valuesMap) TrySet(value reflect.Value, structField reflect.StructField, name string, options options) (bool, error) {
 	items, ok := m[name]
 	if !ok && !options.hasDefault {
 		return false, nil

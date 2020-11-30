@@ -25,45 +25,32 @@ import (
 )
 
 func main() {
-	d := deer.NewRouter().Use(middlewares.Trace())
+	r := deer.NewRouter().Use(middlewares.Trace())
 
-	d.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
+	r.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")
 	})
 
-	d.Run(":8080")
+	r.Run(":8080")
 }
 ```
 
-Demo path params usage:
+Http Client
 
 ```go
+package main
+
+import (
+	"fmt"
+	"github.com/medivhyang/deer"
+)
+
 func main() {
-	d := deer.NewRouter().Use(middlewares.Trace())
-
-	d.Get("/orgs/:oid", func(w deer.ResponseWriter, r *deer.Request) {
-		w.Text(http.StatusOK, fmt.Sprintf("oid = %s", r.PathParam("oid")))
-	})
-	d.Get("/orgs/:oid/users/:uid", func(w deer.ResponseWriter, r *deer.Request) {
-		w.Text(http.StatusOK, fmt.Sprintf("oid = %s, uid = %s", r.PathParam("oid"), r.PathParam("uid")))
-	})
-	d.Get("/files/*filename", func(w deer.ResponseWriter, r *deer.Request) {
-		w.Text(http.StatusOK, fmt.Sprintf("filename = %s", r.PathParam("filename")))
-	})
-
-	d.Run(":8080")
-}
-```
-
-Demo http client usage:
-
-```go
-func main() {
-	resp, err := deer.Get("https://example.com").Do()
+	text, err := deer.GetText("https://baidu.com")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(resp.Text())
+	fmt.Println(text)
 }
 ```
 

@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-func Timing(callback ...func(d time.Duration, w deer.ResponseWriter, r *deer.Request)) deer.Middleware {
-	var f func(d time.Duration, w deer.ResponseWriter, r *deer.Request)
+func Timing(callback ...func(w deer.ResponseWriter, r *deer.Request, d time.Duration)) deer.Middleware {
+	var f func(w deer.ResponseWriter, r *deer.Request, d time.Duration)
 	if len(callback) > 0 {
 		f = callback[0]
 	}
 	if f == nil {
-		f = func(d time.Duration, w deer.ResponseWriter, r *deer.Request) {
+		f = func(w deer.ResponseWriter, r *deer.Request, d time.Duration) {
 			log.Printf("timing: \"%s %s\" cost %s\n", r.Method(), r.Path(), d)
 		}
 	}
@@ -20,7 +20,7 @@ func Timing(callback ...func(d time.Duration, w deer.ResponseWriter, r *deer.Req
 		return func(w deer.ResponseWriter, r *deer.Request) {
 			defer func(start time.Time) {
 				d := time.Since(start)
-				f(d, w, r)
+				f(w, r, d)
 			}(time.Now())
 			h.ServeHTTP(w.Raw(), r.Raw())
 		}

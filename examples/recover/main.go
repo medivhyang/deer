@@ -6,11 +6,11 @@ import (
 )
 
 func main() {
-	d := deer.NewRouter().Use(middlewares.Trace(), middlewares.Recovery())
+	r := deer.NewRouter().Use(middlewares.Trace(), middlewares.Recovery())
 
-	d.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
+	r.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
 		panic("1")
 	})
 
-	d.Run(":8080")
+	r.Run(":8080")
 }
