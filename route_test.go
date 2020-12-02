@@ -16,8 +16,8 @@ func Test_trPathPatternToRegexpPattern(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := trPathPatternToRegexpPattern(tt.path); got != tt.want {
-				t.Errorf("trPathPatternToRegexpPattern() = %v, want %v", got, tt.want)
+			if got := toRegexp(tt.path); got != tt.want {
+				t.Errorf("toRegexp() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -33,14 +33,14 @@ type entry struct {
 
 func (e *entry) regexpMatch(path string) bool {
 	if e.regexp == nil {
-		e.regexp = regexp.MustCompile(trPathPatternToRegexpPattern(e.pattern))
+		e.regexp = regexp.MustCompile(toRegexp(e.pattern))
 	}
 	return e.regexp.MatchString(path)
 }
 
-func (e *entry) pathParams(path string) map[string]string {
+func (e *entry) params(path string) map[string]string {
 	if e.regexp == nil {
-		e.regexp = regexp.MustCompile(trPathPatternToRegexpPattern(e.pattern))
+		e.regexp = regexp.MustCompile(toRegexp(e.pattern))
 	}
 	matches := e.regexp.FindStringSubmatch(path)
 	names := e.regexp.SubexpNames()
@@ -54,13 +54,13 @@ func (e *entry) pathParams(path string) map[string]string {
 }
 
 var (
-	namedParamPattern    = regexp.MustCompile(":([^/]+)")
-	wildcardParamPattern = regexp.MustCompile("\\*([^/]+)")
+	namedParamRegexp    = regexp.MustCompile(":([^/]+)")
+	wildcardParamRegexp = regexp.MustCompile("\\*([^/]+)")
 )
 
-func trPathPatternToRegexpPattern(pattern string) string {
-	s := namedParamPattern.ReplaceAllString(pattern, "(?P<$1>[^/]+)")
-	s = wildcardParamPattern.ReplaceAllString(s, "(?P<$1>.*)")
+func toRegexp(pattern string) string {
+	s := namedParamRegexp.ReplaceAllString(pattern, "(?P<$1>[^/]+)")
+	s = wildcardParamRegexp.ReplaceAllString(s, "(?P<$1>.*)")
 	s = "^" + s + "$"
 	return s
 }
@@ -138,20 +138,12 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if e == nil {
-		if method == http.MethodOptions {
-			e = &entry{
-				pattern: path,
-				handler: func(w ResponseWriter, r *Request) {},
-			}
-		}
-	}
 	if e == nil || e.handler == nil {
 		router.notFound(w, r)
 		return
 	}
 	if regexpMatch {
-		r = r.WithContext(context.WithValue(r.Context(), pathParamsContextKey, e.pathParams(path)))
+		r = r.WithContext(context.WithValue(r.Context(), paramsContextKeySingleton, e.params(path)))
 	}
 	h := Chain(Chain(e.handler, e.middlewares...), router.middlewares...)
 	h.ServeHTTP(w, r)
@@ -162,27 +154,43 @@ func (router *Router) Group(prefix string, middlewares ...Middleware) *group {
 }
 
 func (router *Router) Any(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
-	return router.Handle("", pattern, handler, middlewares...)
+	router.Handle(http.MethodGet, pattern, handler, middlewares...)
+	router.Handle(http.MethodPost, pattern, handler, middlewares...)
+	router.Handle(http.MethodPut, pattern, handler, middlewares...)
+	router.Handle(http.MethodPatch, pattern, handler, middlewares...)
+	router.Handle(http.MethodDelete, pattern, handler, middlewares...)
+	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return router
 }
 
 func (router *Router) Get(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
-	return router.Handle(http.MethodGet, pattern, handler, middlewares...)
+	router.Handle(http.MethodGet, pattern, handler, middlewares...)
+	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return router
 }
 
 func (router *Router) Post(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
-	return router.Handle(http.MethodPost, pattern, handler, middlewares...)
+	router.Handle(http.MethodPost, pattern, handler, middlewares...)
+	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return router
 }
 
 func (router *Router) Put(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
-	return router.Handle(http.MethodPut, pattern, handler, middlewares...)
+	router.Handle(http.MethodPut, pattern, handler, middlewares...)
+	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return router
 }
 
 func (router *Router) Patch(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
-	return router.Handle(http.MethodPatch, pattern, handler, middlewares...)
+	router.Handle(http.MethodPatch, pattern, handler, middlewares...)
+	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return router
 }
 
 func (router *Router) Delete(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
-	return router.Handle(http.MethodDelete, pattern, handler, middlewares...)
+	router.Handle(http.MethodDelete, pattern, handler, middlewares...)
+	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return router
 }
 
 func (router *Router) Options(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
@@ -343,37 +351,55 @@ func (g *group) Use(middlewares ...Middleware) *group {
 }
 
 func (g *group) Any(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
-	return g.Handle("", pattern, handler, middlewares...)
+	g.Handle(http.MethodGet, pattern, handler, middlewares...)
+	g.Handle(http.MethodPost, pattern, handler, middlewares...)
+	g.Handle(http.MethodPut, pattern, handler, middlewares...)
+	g.Handle(http.MethodPatch, pattern, handler, middlewares...)
+	g.Handle(http.MethodDelete, pattern, handler, middlewares...)
+	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return g
 }
 
 func (g *group) Get(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
-	return g.Handle(http.MethodGet, pattern, handler, middlewares...)
+	g.Handle(http.MethodGet, pattern, handler, middlewares...)
+	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return g
 }
 
 func (g *group) Post(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
-	return g.Handle(http.MethodPost, pattern, handler, middlewares...)
+	g.Handle(http.MethodPost, pattern, handler, middlewares...)
+	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return g
 }
 
 func (g *group) Put(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
-	return g.Handle(http.MethodPut, pattern, handler, middlewares...)
+	g.Handle(http.MethodPut, pattern, handler, middlewares...)
+	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return g
 }
 
 func (g *group) Patch(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
-	return g.Handle(http.MethodPatch, pattern, handler, middlewares...)
+	g.Handle(http.MethodPatch, pattern, handler, middlewares...)
+	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return g
 }
 
 func (g *group) Delete(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
-	return g.Handle(http.MethodDelete, pattern, handler, middlewares...)
+	g.Handle(http.MethodDelete, pattern, handler, middlewares...)
+	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
+	return g
 }
 
 func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 
-var pathParamsContextKey = &struct{}{}
+type paramsContextKey struct{}
+
+var paramsContextKeySingleton = paramsContextKey{}
 
 func Params(r *http.Request) map[string]string {
-	m, ok := r.Context().Value(pathParamsContextKey).(map[string]string)
+	m, ok := r.Context().Value(paramsContextKeySingleton).(map[string]string)
 	if ok {
 		return m
 	}
