@@ -125,25 +125,31 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	e := router.entryMap[k]
 	if e == nil {
-		k.method = ""
-		e = router.entryMap[k]
-	}
-	regexpMatch := false
-	if e == nil {
+		regexpMatch := false
 		for _, v := range router.entries {
-			if v.regexpMatch(path) && (v.method == "" || v.method == method) {
+			if v.regexpMatch(path) && v.method == method {
 				regexpMatch = true
 				e = v
 				break
 			}
 		}
+		if regexpMatch && e != nil {
+			r = r.WithContext(context.WithValue(r.Context(), paramsContextKeySingleton, e.params(path)))
+		}
 	}
-	if e == nil || e.handler == nil {
-		router.notFound(w, r)
-		return
+	if e == nil {
+		if method == http.MethodOptions {
+			e = &entry{
+				method:  http.MethodOptions,
+				pattern: path,
+			}
+		} else {
+			router.notFound(w, r)
+			return
+		}
 	}
-	if regexpMatch {
-		r = r.WithContext(context.WithValue(r.Context(), paramsContextKeySingleton, e.params(path)))
+	if e.handler == nil {
+		e.handler = emptyHandlerFunc
 	}
 	h := Chain(Chain(e.handler, e.middlewares...), router.middlewares...)
 	h.ServeHTTP(w, r)
@@ -165,31 +171,26 @@ func (router *Router) Any(pattern string, handler HandlerFunc, middlewares ...Mi
 
 func (router *Router) Get(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	router.Handle(http.MethodGet, pattern, handler, middlewares...)
-	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return router
 }
 
 func (router *Router) Post(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	router.Handle(http.MethodPost, pattern, handler, middlewares...)
-	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return router
 }
 
 func (router *Router) Put(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	router.Handle(http.MethodPut, pattern, handler, middlewares...)
-	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return router
 }
 
 func (router *Router) Patch(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	router.Handle(http.MethodPatch, pattern, handler, middlewares...)
-	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return router
 }
 
 func (router *Router) Delete(pattern string, handler HandlerFunc, middlewares ...Middleware) *Router {
 	router.Handle(http.MethodDelete, pattern, handler, middlewares...)
-	router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return router
 }
 
@@ -369,37 +370,34 @@ func (g *group) Any(pattern string, handler HandlerFunc, middlewares ...Middlewa
 
 func (g *group) Get(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	g.Handle(http.MethodGet, pattern, handler, middlewares...)
-	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return g
 }
 
 func (g *group) Post(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	g.Handle(http.MethodPost, pattern, handler, middlewares...)
-	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return g
 }
 
 func (g *group) Put(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	g.Handle(http.MethodPut, pattern, handler, middlewares...)
-	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return g
 }
 
 func (g *group) Patch(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	g.Handle(http.MethodPatch, pattern, handler, middlewares...)
-	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return g
 }
 
 func (g *group) Delete(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	g.Handle(http.MethodDelete, pattern, handler, middlewares...)
-	g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 	return g
 }
 
 func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Middleware) *group {
 	return g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
+
+func emptyHandlerFunc(w ResponseWriter, r *Request) {}
 
 type paramsContextKey struct{}
 
