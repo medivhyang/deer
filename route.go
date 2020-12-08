@@ -297,7 +297,14 @@ func normalizePrefix(p string) string {
 
 func appendSorted(es []*entry, e *entry) []*entry {
 	n := len(es)
-	i := sort.Search(n, func(i int) bool {
+	findIndex := sort.Search(n, func(i int) bool {
+		return es[i].method == e.method && es[i].pattern == e.pattern
+	})
+	if findIndex < n {
+		es[findIndex] = e
+		return es
+	}
+	smallestIndex := sort.Search(n, func(i int) bool {
 		l1 := len(strings.Split(es[i].pattern, "/"))
 		l2 := len(strings.Split(e.pattern, "/"))
 		if l1 != l2 {
@@ -305,12 +312,12 @@ func appendSorted(es []*entry, e *entry) []*entry {
 		}
 		return len(es[i].pattern) < len(e.pattern)
 	})
-	if i == n {
+	if smallestIndex == n {
 		return append(es, e)
 	}
 	es = append(es, nil)
-	copy(es[i+1:], es[i:])
-	es[i] = e
+	copy(es[smallestIndex+1:], es[smallestIndex:])
+	es[smallestIndex] = e
 	return es
 }
 
