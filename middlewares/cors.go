@@ -19,24 +19,22 @@ func CORS(config ...CORSConfig) deer.Middleware {
 	if len(config) > 0 {
 		finalConfig = config[0]
 	} else {
-		finalConfig = CORSConfig{}
+		finalConfig = CORSConfig{
+			AllowOrigins: []string{"*"},
+			AllowMethods: []string{"*"},
+			AllowHeaders: []string{"*"},
+		}
 	}
 	return func(h deer.HandlerFunc) deer.HandlerFunc {
 		return func(w deer.ResponseWriter, r *deer.Request) {
 			if len(finalConfig.AllowHeaders) > 0 {
 				w.SetHeader("Access-Control-Allow-Origin", strings.Join(finalConfig.AllowHeaders, ","))
-			} else {
-				w.SetHeader("Access-Control-Allow-Origin", "*")
 			}
 			if len(finalConfig.AllowMethods) > 0 {
 				w.SetHeader("Access-Control-Allow-Methods", strings.Join(finalConfig.AllowMethods, ","))
-			} else {
-				w.SetHeader("Access-Control-Allow-Methods", "*")
 			}
 			if len(finalConfig.AllowHeaders) > 0 {
 				w.SetHeader("Access-Control-Allow-Headers", strings.Join(finalConfig.AllowHeaders, ","))
-			} else {
-				w.SetHeader("Access-Control-Allow-Headers", "*")
 			}
 			if len(finalConfig.ExposeHeaders) > 0 {
 				w.SetHeader("Access-Control-Expose-Headers", strings.Join(finalConfig.ExposeHeaders, ","))
@@ -44,10 +42,12 @@ func CORS(config ...CORSConfig) deer.Middleware {
 			if finalConfig.AllowCredentials {
 				w.SetHeader("Access-Control-Allow-Credentials", "true")
 			}
-			if r.Method() != http.MethodOptions {
-				h.ServeHTTP(w.Raw(), r.Raw())
+
+			if r.Method() == http.MethodOptions {
+				w.SetStatusCode(http.StatusNoContent)
 				return
 			}
+			h.Next(w, r)
 		}
 	}
 }
