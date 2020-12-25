@@ -28,7 +28,7 @@ func CORS(config ...CORSConfig) deer.Middleware {
 	return func(h deer.HandlerFunc) deer.HandlerFunc {
 		return func(w deer.ResponseWriter, r *deer.Request) {
 			if len(finalConfig.AllowOrigins) > 0 {
-				w.SetHeader("Access-Control-Allow-Origin", strings.Join(finalConfig.AllowHeaders, ","))
+				w.SetHeader("Access-Control-Allow-Origin", strings.Join(finalConfig.AllowOrigins, ","))
 			}
 			if len(finalConfig.AllowMethods) > 0 {
 				w.SetHeader("Access-Control-Allow-Methods", strings.Join(finalConfig.AllowMethods, ","))
