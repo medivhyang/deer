@@ -144,10 +144,9 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			e = &entry{
-				method:  http.MethodOptions,
+				method:  method,
 				handler: notFoundHandlerFunc,
 			}
-			return
 		}
 	}
 	h := Chain(Chain(e.handler, e.middlewares...), router.middlewares...)
