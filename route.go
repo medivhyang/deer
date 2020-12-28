@@ -111,30 +111,29 @@ func (router *Router) handle(method string, path string, handler HandlerFunc, mi
 
 func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	method, path := r.Method, r.URL.Path
-	if !strings.HasPrefix(path, router.prefix) {
-		router.notFound(w, r)
-		return
-	}
-	path = strings.TrimPrefix(path, router.prefix)
-	k := key{
-		method: method,
-		path:   path,
-	}
-	if router.entryMap == nil {
-		router.entryMap = map[key]*entry{}
-	}
-	e := router.entryMap[k]
-	if e == nil {
-		regexpMatch := false
-		for _, v := range router.entries {
-			if v.regexpMatch(path) && v.method == method {
-				regexpMatch = true
-				e = v
-				break
-			}
+	var e *entry
+	if strings.HasPrefix(path, router.prefix) {
+		path = strings.TrimPrefix(path, router.prefix)
+		k := key{
+			method: method,
+			path:   path,
 		}
-		if regexpMatch && e != nil {
-			r = r.WithContext(context.WithValue(r.Context(), paramsContextKeySingleton, e.params(path)))
+		if router.entryMap == nil {
+			router.entryMap = map[key]*entry{}
+		}
+		e = router.entryMap[k]
+		if e == nil {
+			regexpMatch := false
+			for _, v := range router.entries {
+				if v.regexpMatch(path) && v.method == method {
+					regexpMatch = true
+					e = v
+					break
+				}
+			}
+			if regexpMatch && e != nil {
+				r = r.WithContext(context.WithValue(r.Context(), paramsContextKeySingleton, e.params(path)))
+			}
 		}
 	}
 	if e == nil {
@@ -144,7 +143,10 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				handler: optionsHandlerFunc,
 			}
 		} else {
-			router.notFound(w, r)
+			e = &entry{
+				method:  http.MethodOptions,
+				handler: notFoundHandlerFunc,
+			}
 			return
 		}
 	}
@@ -261,15 +263,6 @@ func (router *Router) String() string {
 
 func (router *Router) Run(addr string) error {
 	return http.ListenAndServe(addr, router)
-}
-
-func (router *Router) notFound(w http.ResponseWriter, r *http.Request) {
-	if router.notFoundHandler != nil {
-		router.notFoundHandler.ServeHTTP(w, r)
-		return
-	}
-	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte(http.StatusText(http.StatusNotFound)))
 }
 
 func normalizePath(p string) string {
@@ -396,6 +389,10 @@ func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Midd
 
 func optionsHandlerFunc(w ResponseWriter, r *Request) {
 	w.SetHeader("Content-Length", "0")
+}
+
+func notFoundHandlerFunc(w ResponseWriter, r *Request) {
+	w.Error(http.StatusNotFound)
 }
 
 type paramsContextKey struct{}

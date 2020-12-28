@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"github.com/medivhyang/deer"
-	"net/http"
 	"strings"
 )
 
@@ -41,11 +40,6 @@ func CORS(config ...CORSConfig) deer.Middleware {
 			}
 			if finalConfig.AllowCredentials {
 				w.SetHeader("Access-Control-Allow-Credentials", "true")
-			}
-
-			if r.Method() == http.MethodOptions {
-				w.SetStatusCode(http.StatusNoContent)
-				return
 			}
 			h.Next(w, r)
 		}
