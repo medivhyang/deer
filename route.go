@@ -141,15 +141,12 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if method == http.MethodOptions {
 			e = &entry{
 				method:  http.MethodOptions,
-				pattern: path,
+				handler: optionsHandlerFunc,
 			}
 		} else {
 			router.notFound(w, r)
 			return
 		}
-	}
-	if e.handler == nil {
-		e.handler = emptyHandlerFunc
 	}
 	h := Chain(Chain(e.handler, e.middlewares...), router.middlewares...)
 	h.ServeHTTP(w, r)
@@ -397,7 +394,9 @@ func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Midd
 	return g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 
-func emptyHandlerFunc(w ResponseWriter, r *Request) {}
+func optionsHandlerFunc(w ResponseWriter, r *Request) {
+	w.SetHeader("Content-Length", "0")
+}
 
 type paramsContextKey struct{}
 
