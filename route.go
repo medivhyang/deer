@@ -149,7 +149,9 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	h := Chain(Chain(e.handler, e.middlewares...), router.middlewares...)
+	finalMiddlewares := append([]Middleware{}, router.middlewares...)
+	finalMiddlewares = append(finalMiddlewares, e.middlewares...)
+	h := Chain(e.handler, finalMiddlewares...)
 	h.ServeHTTP(w, r)
 }
 
@@ -312,10 +314,8 @@ func appendSorted(es []*entry, e *entry) []*entry {
 }
 
 func Chain(h HandlerFunc, middlewares ...Middleware) HandlerFunc {
-	for _, m := range middlewares {
-		if m != nil {
-			h = WrapHandler(http.HandlerFunc(m(h).ServeHTTP))
-		}
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		h = WrapHandler(http.HandlerFunc(middlewares[i](h).ServeHTTP))
 	}
 	return h
 }
@@ -332,8 +332,8 @@ func (g *group) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (g *group) Handle(method string, path string, handler HandlerFunc, middlewares ...Middleware) *group {
 	path = g.prefix + path
-	finalMiddlewares := append([]Middleware{}, middlewares...)
-	finalMiddlewares = append(finalMiddlewares, g.middlewares...)
+	finalMiddlewares := append([]Middleware{}, g.middlewares...)
+	finalMiddlewares = append(finalMiddlewares, middlewares...)
 	g.router.Handle(method, path, handler, finalMiddlewares...)
 	return g
 }
