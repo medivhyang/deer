@@ -392,7 +392,7 @@ func optionsHandlerFunc(w ResponseWriter, r *Request) {
 }
 
 func notFoundHandlerFunc(w ResponseWriter, r *Request) {
-	w.Error(http.StatusNotFound)
+	w.Text(http.StatusNotFound, http.StatusText(http.StatusNotFound))
 }
 
 type paramsContextKey struct{}

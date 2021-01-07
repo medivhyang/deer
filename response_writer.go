@@ -15,7 +15,6 @@ type ResponseWriter interface {
 	HTML(statusCode int, content string)
 	JSON(statusCode int, value interface{})
 	XML(statusCode int, value interface{})
-	Error(statusCode int, errorMessage ...string)
 }
 
 type responseWriter struct {
@@ -69,12 +68,4 @@ func (w *responseWriter) XML(statusCode int, value interface{}) {
 	if err := xml.NewEncoder(w.raw).Encode(value); err != nil {
 		http.Error(w.raw, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-func (w *responseWriter) Error(statusCode int, errorMessage ...string) {
-	if len(errorMessage) > 0 {
-		http.Error(w.raw, errorMessage[0], statusCode)
-		return
-	}
-	http.Error(w.raw, http.StatusText(statusCode), statusCode)
 }
