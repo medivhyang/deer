@@ -15,7 +15,7 @@ func AllowedMethods(methods ...string) func(deer.HandlerFunc) deer.HandlerFunc {
 				}
 			}
 			if !find {
-				w.Error(http.StatusMethodNotAllowed)
+				w.SetStatusCode(http.StatusMethodNotAllowed)
 				return
 			}
 			h.Next(w, r)
