@@ -198,7 +198,7 @@ func (router *Router) Options(pattern string, handler HandlerFunc, middlewares .
 	return router.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 
-type View struct {
+type EntryView struct {
 	Method  string `json:"method"`
 	Pattern string `json:"pattern"`
 }
@@ -209,7 +209,7 @@ func (s sortedEntrySlice) Len() int {
 	return len(s)
 }
 
-var sortMethods = map[string]int{
+var methodOrders = map[string]int{
 	"":                 0,
 	http.MethodGet:     1,
 	http.MethodHead:    2,
@@ -228,24 +228,24 @@ func (s sortedEntrySlice) Less(i, j int) bool {
 	}
 	mi := strings.ToUpper(s[i].method)
 	mj := strings.ToUpper(s[j].method)
-	return sortMethods[mi] < sortMethods[mj]
+	return methodOrders[mi] < methodOrders[mj]
 }
 
 func (s sortedEntrySlice) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-func (router *Router) Items() []View {
+func (router *Router) Items() []EntryView {
 	copies := append([]*entry{}, router.entries...)
 	sort.Sort(sortedEntrySlice(copies))
-	var result []View
+	var result []EntryView
 	for _, entry := range copies {
 		method, pattern := entry.method, entry.pattern
 		if method == "" {
 			method = "ANY"
 		}
 		pattern = router.prefix + pattern
-		result = append(result, View{
+		result = append(result, EntryView{
 			Method:  method,
 			Pattern: pattern,
 		})
@@ -315,7 +315,7 @@ func appendSorted(es []*entry, e *entry) []*entry {
 
 func Chain(h HandlerFunc, middlewares ...Middleware) HandlerFunc {
 	for i := len(middlewares) - 1; i >= 0; i-- {
-		h = WrapHandler(http.HandlerFunc(middlewares[i](h).ServeHTTP))
+		h = middlewares[i](h)
 	}
 	return h
 }

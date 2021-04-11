@@ -1,7 +1,6 @@
 package deer
 
 import (
-	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -11,6 +10,8 @@ import (
 	"net/http/httputil"
 	"os"
 )
+
+var ErrResponseBodyHasRead = errors.New("deer: http response: body has read")
 
 type Response interface {
 	Raw() (*http.Response, error)
@@ -22,7 +23,6 @@ type Response interface {
 	Write(writer io.Writer) error
 	WriteFile(filename string) error
 	Dump(body bool) ([]byte, error)
-	Copy() Response
 }
 
 func WrapResponse(r *http.Response) Response {
@@ -35,8 +35,8 @@ type response struct {
 }
 
 func (r *response) Raw() (*http.Response, error) {
-	if err := r.check(); err != nil {
-		return nil, err
+	if r.read {
+		return nil, ErrResponseBodyHasRead
 	}
 	return r.raw, nil
 }
@@ -45,21 +45,9 @@ func (r *response) Dump(body bool) ([]byte, error) {
 	return httputil.DumpResponse(r.raw, body)
 }
 
-func (r *response) Copy() Response {
-	if r.raw.Body == nil {
-		return ErrorResponse(errors.New("deer: response copy: require body"))
-	}
-	buffer, err := ioutil.ReadAll(r.raw.Body)
-	if err != nil {
-		return ErrorResponse(err)
-	}
-	r.raw.Body = ioutil.NopCloser(bytes.NewBuffer(buffer))
-	return r
-}
-
 func (r *response) Write(writer io.Writer) error {
-	if err := r.check(); err != nil {
-		return err
+	if r.read {
+		return ErrResponseBodyHasRead
 	}
 	defer func() {
 		r.raw.Body.Close()
@@ -72,8 +60,8 @@ func (r *response) Write(writer io.Writer) error {
 }
 
 func (r *response) WriteFile(filename string) error {
-	if err := r.check(); err != nil {
-		return err
+	if r.read {
+		return ErrResponseBodyHasRead
 	}
 	defer func() {
 		r.raw.Body.Close()
@@ -90,15 +78,15 @@ func (r *response) WriteFile(filename string) error {
 }
 
 func (r *response) Stream() (io.ReadCloser, error) {
-	if err := r.check(); err != nil {
-		return nil, err
+	if r.read {
+		return nil, ErrResponseBodyHasRead
 	}
 	return r.raw.Body, nil
 }
 
 func (r *response) Bytes() ([]byte, error) {
-	if err := r.check(); err != nil {
-		return nil, err
+	if r.read {
+		return nil, ErrResponseBodyHasRead
 	}
 	defer func() {
 		r.raw.Body.Close()
@@ -112,8 +100,8 @@ func (r *response) Bytes() ([]byte, error) {
 }
 
 func (r *response) Text() (string, error) {
-	if err := r.check(); err != nil {
-		return "", err
+	if r.read {
+		return "", ErrResponseBodyHasRead
 	}
 	defer func() {
 		r.raw.Body.Close()
@@ -127,8 +115,8 @@ func (r *response) Text() (string, error) {
 }
 
 func (r *response) JSON(value interface{}) error {
-	if err := r.check(); err != nil {
-		return err
+	if r.read {
+		return ErrResponseBodyHasRead
 	}
 	defer func() {
 		r.raw.Body.Close()
@@ -138,21 +126,14 @@ func (r *response) JSON(value interface{}) error {
 }
 
 func (r *response) XML(value interface{}) error {
-	if err := r.check(); err != nil {
-		return err
+	if r.read {
+		return ErrResponseBodyHasRead
 	}
 	defer func() {
 		r.raw.Body.Close()
 		r.read = true
 	}()
 	return xml.NewDecoder(r.raw.Body).Decode(value)
-}
-
-func (r *response) check() error {
-	if r.read {
-		return errors.New("deer: http response: body has read")
-	}
-	return nil
 }
 
 type errResponse struct {
@@ -208,8 +189,4 @@ func (r *errResponse) WriteFile(filename string) error {
 
 func (r *errResponse) Dump(body bool) ([]byte, error) {
 	return nil, r.err
-}
-
-func (r *errResponse) Copy() Response {
-	return ErrorResponse(r.err)
 }

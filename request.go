@@ -49,7 +49,7 @@ func (r *Request) HeaderOrDefault(key string, value string) string {
 	return result
 }
 
-func (r *Request) ExistsHeader(key string) bool {
+func (r *Request) HeaderExists(key string) bool {
 	if r.raw.Header == nil {
 		return false
 	}
@@ -86,7 +86,7 @@ func (r *Request) CookieOrDefault(key string, defaultValue ...string) string {
 	return cookie.Value
 }
 
-func (r *Request) ExistsCookie(key string) bool {
+func (r *Request) CookieExists(key string) bool {
 	_, err := r.raw.Cookie(key)
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -115,7 +115,7 @@ func (r *Request) ParamOrDefault(key string, value string) string {
 	return result
 }
 
-func (r *Request) ExistsParam(key string) bool {
+func (r *Request) ParamExists(key string) bool {
 	if r.params == nil {
 		r.params = Params(r.raw)
 	}
@@ -135,7 +135,7 @@ func (r *Request) QueryOrDefault(key string, value string) string {
 	return result
 }
 
-func (r *Request) ExistsQuery(key string) bool {
+func (r *Request) QueryExists(key string) bool {
 	values := r.raw.URL.Query()
 	if values == nil {
 		return false
@@ -147,7 +147,7 @@ func (r *Request) PostForm(key string) string {
 	return r.raw.PostFormValue(key)
 }
 
-func (r *Request) ExistsPostForm(key string) bool {
+func (r *Request) PostFormExists(key string) bool {
 	_ = r.raw.ParseForm()
 	if r.raw.PostForm == nil {
 		return false
@@ -163,7 +163,7 @@ func (r *Request) FormValue(key string) string {
 	return r.raw.FormValue(key)
 }
 
-func (r *Request) ExistsForm(key string) bool {
+func (r *Request) FormExists(key string) bool {
 	_ = r.raw.ParseForm()
 	if r.raw.Form == nil {
 		return false
@@ -171,11 +171,11 @@ func (r *Request) ExistsForm(key string) bool {
 	return len(r.raw.Form[key]) > 0
 }
 
-func (r *Request) DecodeJSONBody(value interface{}) error {
+func (r *Request) JSON(value interface{}) error {
 	return json.NewDecoder(r.raw.Body).Decode(value)
 }
 
-func (r *Request) DecodeXMLBody(value interface{}) error {
+func (r *Request) XML(value interface{}) error {
 	return xml.NewDecoder(r.raw.Body).Decode(value)
 }
 

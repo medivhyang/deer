@@ -104,7 +104,7 @@ func (b *RequestBuilder) GetText(path string) (string, error) {
 }
 
 func (b *RequestBuilder) GetFile(path string, filename string) error {
-	return b.Get(path).WriteFile(filename)
+	return b.Get(path).File(filename)
 }
 
 func (b *RequestBuilder) GetStream(path string) (io.ReadCloser, error) {
@@ -118,7 +118,7 @@ func (b *RequestBuilder) Post(path string) *RequestBuilder {
 }
 
 func (b *RequestBuilder) PostJSON(path string, body interface{}) *RequestBuilder {
-	return b.Post(path).WithJSONBody(body)
+	return b.Post(path).WriteJSON(body)
 }
 
 func (b *RequestBuilder) Put(path string) *RequestBuilder {
@@ -128,7 +128,7 @@ func (b *RequestBuilder) Put(path string) *RequestBuilder {
 }
 
 func (b *RequestBuilder) PutJSON(path string, body interface{}) *RequestBuilder {
-	return b.Put(path).WithJSONBody(body)
+	return b.Put(path).WriteJSON(body)
 }
 
 func (b *RequestBuilder) Delete(path string) *RequestBuilder {
@@ -144,7 +144,7 @@ func (b *RequestBuilder) Patch(path string) *RequestBuilder {
 }
 
 func (b *RequestBuilder) PatchJSON(path string, body interface{}) *RequestBuilder {
-	return b.Patch(path).WithJSONBody(body)
+	return b.Patch(path).WriteJSON(body)
 }
 
 func (b *RequestBuilder) Options(path string) *RequestBuilder {
@@ -183,12 +183,12 @@ func (b *RequestBuilder) Headers(m map[string]string) *RequestBuilder {
 	return b
 }
 
-func (b *RequestBuilder) WithTextBody(text string) *RequestBuilder {
+func (b *RequestBuilder) WriteText(text string) *RequestBuilder {
 	b.body = strings.NewReader(text)
 	return b
 }
 
-func (b *RequestBuilder) WithJSONBody(v interface{}) *RequestBuilder {
+func (b *RequestBuilder) WriteJSON(v interface{}) *RequestBuilder {
 	bs, err := json.Marshal(v)
 	if err != nil {
 		b.err = err
@@ -198,7 +198,7 @@ func (b *RequestBuilder) WithJSONBody(v interface{}) *RequestBuilder {
 	return b
 }
 
-func (b *RequestBuilder) WithXMLBody(v interface{}) *RequestBuilder {
+func (b *RequestBuilder) WriteXML(v interface{}) *RequestBuilder {
 	bs, err := xml.Marshal(v)
 	if err != nil {
 		b.err = err
@@ -208,7 +208,7 @@ func (b *RequestBuilder) WithXMLBody(v interface{}) *RequestBuilder {
 	return b
 }
 
-func (b *RequestBuilder) WithFile(filename string) *RequestBuilder {
+func (b *RequestBuilder) WriteFile(filename string) *RequestBuilder {
 	file, err := os.Open(filename)
 	if err != nil {
 		b.err = err
@@ -218,7 +218,7 @@ func (b *RequestBuilder) WithFile(filename string) *RequestBuilder {
 	return b
 }
 
-func (b *RequestBuilder) WithReaderBody(r io.Reader) *RequestBuilder {
+func (b *RequestBuilder) ReaderBody(r io.Reader) *RequestBuilder {
 	b.body = r
 	return b
 }
@@ -280,11 +280,11 @@ func (b *RequestBuilder) Stream() (io.ReadCloser, error) {
 	return b.Do().Stream()
 }
 
-func (b *RequestBuilder) Write(writer io.Writer) error {
+func (b *RequestBuilder) Pipe(writer io.Writer) error {
 	return b.Do().Write(writer)
 }
 
-func (b *RequestBuilder) WriteFile(filename string) error {
+func (b *RequestBuilder) File(filename string) error {
 	return b.Do().WriteFile(filename)
 }
 
