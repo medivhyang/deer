@@ -36,8 +36,8 @@ func BasicAuthWithFunc(f func(username, password string) bool, realm ...string) 
 					return
 				}
 			}
-			w.SetHeader("WWW-Authenticate", fmt.Sprintf("Basic realm=%q", finalRealm))
-			w.SetStatusCode(http.StatusUnauthorized)
+			w.Header("WWW-Authenticate", fmt.Sprintf("Basic realm=%q", finalRealm))
+			w.StatusCode(http.StatusUnauthorized)
 			return
 		}
 	}

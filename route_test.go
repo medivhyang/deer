@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_trPathPatternToRegexpPattern(t *testing.T) {
+func Test_toRegexp(t *testing.T) {
 	tests := []struct {
 		name string
 		path string

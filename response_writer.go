@@ -9,8 +9,8 @@ import (
 
 type ResponseWriter interface {
 	Raw() http.ResponseWriter
-	SetHeader(key string, value string) *responseWriter
-	SetStatusCode(statusCode int)
+	StatusCode(statusCode int)
+	Header(key string, value string) *responseWriter
 	Text(statusCode int, text string)
 	HTML(statusCode int, content string)
 	JSON(statusCode int, value interface{})
@@ -29,13 +29,13 @@ func (w *responseWriter) Raw() http.ResponseWriter {
 	return w.raw
 }
 
-func (w *responseWriter) SetHeader(key string, value string) *responseWriter {
-	w.raw.Header().Set(key, value)
-	return w
+func (w *responseWriter) StatusCode(statusCode int) {
+	w.raw.WriteHeader(statusCode)
 }
 
-func (w *responseWriter) SetStatusCode(statusCode int) {
-	w.raw.WriteHeader(statusCode)
+func (w *responseWriter) Header(key string, value string) *responseWriter {
+	w.raw.Header().Set(key, value)
+	return w
 }
 
 func (w *responseWriter) Text(statusCode int, text string) {

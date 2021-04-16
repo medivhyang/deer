@@ -5,22 +5,22 @@ import (
 	"time"
 )
 
-func ExampleBindWithQuery() {
+func ExampleBind() {
 	type User struct {
 		ID          string
 		Name        string
 		Age         int
 		Likes       []string
-		CreatedTime time.Time `time_format:"unix"`
+		CreatedTime time.Time `binding:"time=unix,tz=Asia/Kolkata"`
 	}
 	var user User
-	if err := BindWithQuery(&user, map[string][]string{
+	if err := Bind(map[string][]string{
 		"id":           {"1"},
 		"name":         {"Alice"},
 		"age":          {"20"},
 		"likes":        {"cat", "dog", "deer"},
 		"created_time": {fmt.Sprintf("%d", time.Date(2020, 9, 18, 0, 0, 0, 0, time.UTC).Unix())},
-	}); err != nil {
+	}, &user); err != nil {
 		panic(err)
 	}
 	fmt.Printf("%+v", user)

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
-	"github.com/medivhyang/deer/internal/binding"
 	"net/http"
+
+	"github.com/medivhyang/deer/internal/binding"
 )
 
 func WrapRequest(r *http.Request) *Request {
@@ -13,8 +14,8 @@ func WrapRequest(r *http.Request) *Request {
 }
 
 type Request struct {
-	params map[string]string
 	raw    *http.Request
+	params map[string]string
 }
 
 func (r *Request) Raw() *http.Request {
@@ -68,7 +69,7 @@ func (r *Request) Cookie(key string) (string, error) {
 	return cookie.Value, nil
 }
 
-func (r *Request) SetCooke(cookie *http.Cookie) {
+func (r *Request) AddCooke(cookie *http.Cookie) {
 	r.raw.AddCookie(cookie)
 }
 
@@ -155,11 +156,7 @@ func (r *Request) PostFormExists(key string) bool {
 	return len(r.raw.PostForm[key]) > 0
 }
 
-func (r *Request) Form() map[string][]string {
-	return r.raw.Form
-}
-
-func (r *Request) FormValue(key string) string {
+func (r *Request) Form(key string) string {
 	return r.raw.FormValue(key)
 }
 
@@ -171,30 +168,30 @@ func (r *Request) FormExists(key string) bool {
 	return len(r.raw.Form[key]) > 0
 }
 
-func (r *Request) JSON(value interface{}) error {
-	return json.NewDecoder(r.raw.Body).Decode(value)
+func (r *Request) BindJSON(i interface{}) error {
+	return json.NewDecoder(r.raw.Body).Decode(i)
 }
 
-func (r *Request) XML(value interface{}) error {
-	return xml.NewDecoder(r.raw.Body).Decode(value)
+func (r *Request) BindXML(i interface{}) error {
+	return xml.NewDecoder(r.raw.Body).Decode(i)
 }
 
-func (r *Request) BindWithQuery(target interface{}) error {
-	return binding.BindWithQuery(target, r.raw.URL.Query())
+func (r *Request) BindQuery(i interface{}) error {
+	return binding.BindUrlValues(r.raw.URL.Query(), i)
 }
 
-func (r *Request) BindWithPostForm(target interface{}) error {
+func (r *Request) BindPostForm(i interface{}) error {
 	if err := r.raw.ParseForm(); err != nil {
 		return err
 	}
-	return binding.BindWithPostForm(target, r.raw.PostForm)
+	return binding.BindUrlValues(r.raw.PostForm, i)
 }
 
-func (r *Request) BindWithForm(target interface{}) error {
+func (r *Request) BindForm(i interface{}) error {
 	if err := r.raw.ParseForm(); err != nil {
 		return err
 	}
-	return binding.BindWithForm(target, r.raw.Form)
+	return binding.BindUrlValues(r.raw.Form, i)
 }
 
 func (r *Request) BasicAuth() (username string, password string, ok bool) {

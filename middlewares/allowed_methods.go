@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func AllowedMethods(methods ...string) func(deer.HandlerFunc) deer.HandlerFunc {
+func AllowedMethods(methods ...string) deer.Middleware {
 	return func(h deer.HandlerFunc) deer.HandlerFunc {
 		return func(w deer.ResponseWriter, r *deer.Request) {
 			find := false
@@ -15,7 +15,7 @@ func AllowedMethods(methods ...string) func(deer.HandlerFunc) deer.HandlerFunc {
 				}
 			}
 			if !find {
-				w.SetStatusCode(http.StatusMethodNotAllowed)
+				w.StatusCode(http.StatusMethodNotAllowed)
 				return
 			}
 			h.Next(w, r)

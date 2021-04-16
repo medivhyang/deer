@@ -3,21 +3,18 @@ package middlewares
 import (
 	"fmt"
 	"github.com/medivhyang/deer"
-	"log"
 	"net/http"
 	"runtime/debug"
 )
 
 func Recovery(callback ...func(w deer.ResponseWriter, r *deer.Request, err interface{})) deer.Middleware {
-	var f func(w deer.ResponseWriter, r *deer.Request,err interface{})
+	var f func(w deer.ResponseWriter, r *deer.Request, err interface{})
 	if len(callback) > 0 {
 		f = callback[0]
-	}
-	if f == nil {
+	} else {
 		f = func(w deer.ResponseWriter, r *deer.Request, err interface{}) {
-			log.Printf("deer: catch panic: %v\n", err)
-			log.Println(string(debug.Stack()))
-			http.Error(w.Raw(), fmt.Sprint(err), http.StatusInternalServerError)
+			logf("deer: catch panic: %+v\n%s", err, string(debug.Stack()))
+			w.Text(http.StatusInternalServerError, fmt.Sprint(err))
 		}
 	}
 	return func(h deer.HandlerFunc) deer.HandlerFunc {

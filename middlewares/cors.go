@@ -27,19 +27,19 @@ func CORS(config ...CORSConfig) deer.Middleware {
 	return func(h deer.HandlerFunc) deer.HandlerFunc {
 		return func(w deer.ResponseWriter, r *deer.Request) {
 			if len(finalConfig.AllowOrigins) > 0 {
-				w.SetHeader("Access-Control-Allow-Origin", strings.Join(finalConfig.AllowOrigins, ","))
+				w.Header("Access-Control-Allow-Origin", strings.Join(finalConfig.AllowOrigins, ","))
 			}
 			if len(finalConfig.AllowMethods) > 0 {
-				w.SetHeader("Access-Control-Allow-Methods", strings.Join(finalConfig.AllowMethods, ","))
+				w.Header("Access-Control-Allow-Methods", strings.Join(finalConfig.AllowMethods, ","))
 			}
 			if len(finalConfig.AllowHeaders) > 0 {
-				w.SetHeader("Access-Control-Allow-Headers", strings.Join(finalConfig.AllowHeaders, ","))
+				w.Header("Access-Control-Allow-Headers", strings.Join(finalConfig.AllowHeaders, ","))
 			}
 			if len(finalConfig.ExposeHeaders) > 0 {
-				w.SetHeader("Access-Control-Expose-Headers", strings.Join(finalConfig.ExposeHeaders, ","))
+				w.Header("Access-Control-Expose-Headers", strings.Join(finalConfig.ExposeHeaders, ","))
 			}
 			if finalConfig.AllowCredentials {
-				w.SetHeader("Access-Control-Allow-Credentials", "true")
+				w.Header("Access-Control-Allow-Credentials", "true")
 			}
 			h.Next(w, r)
 		}

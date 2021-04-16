@@ -387,8 +387,8 @@ func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Midd
 }
 
 func optionsHandlerFunc(w ResponseWriter, r *Request) {
-	w.SetHeader("Content-Length", "0")
-	w.SetStatusCode(http.StatusNoContent)
+	w.Header("Content-Length", "0")
+	w.StatusCode(http.StatusNoContent)
 }
 
 func notFoundHandlerFunc(w ResponseWriter, r *Request) {

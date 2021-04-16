@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/medivhyang/deer"
@@ -14,5 +15,5 @@ func main() {
 		w.Text(http.StatusOK, "hello world")
 	})
 
-	r.Run(":8080")
+	log.Fatalln(r.Run(":8080"))
 }

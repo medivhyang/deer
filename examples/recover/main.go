@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/medivhyang/deer"
 	"github.com/medivhyang/deer/middlewares"
+	"log"
 )
 
 func main() {
@@ -12,5 +13,5 @@ func main() {
 		panic("1")
 	})
 
-	r.Run(":8080")
+	log.Fatalln(r.Run(":8080"))
 }

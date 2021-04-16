@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/medivhyang/deer"
@@ -21,5 +22,5 @@ func main() {
 		w.Text(http.StatusOK, fmt.Sprintf("filename = %s", r.Param("filename")))
 	})
 
-	r.Run(":8080")
+	log.Fatalln(r.Run(":8080"))
 }

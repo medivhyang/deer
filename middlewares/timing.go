@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"github.com/medivhyang/deer"
-	"log"
 	"time"
 )
 
@@ -10,10 +9,9 @@ func Timing(callback ...func(w deer.ResponseWriter, r *deer.Request, d time.Dura
 	var f func(w deer.ResponseWriter, r *deer.Request, d time.Duration)
 	if len(callback) > 0 {
 		f = callback[0]
-	}
-	if f == nil {
+	} else {
 		f = func(w deer.ResponseWriter, r *deer.Request, d time.Duration) {
-			log.Printf("timing: \"%s %s\" cost %s\n", r.Method(), r.Path(), d)
+			logf("timing: \"%s %s\" cost %s\n", r.Method(), r.Path(), d)
 		}
 	}
 	return func(h deer.HandlerFunc) deer.HandlerFunc {
@@ -22,7 +20,7 @@ func Timing(callback ...func(w deer.ResponseWriter, r *deer.Request, d time.Dura
 				d := time.Since(start)
 				f(w, r, d)
 			}(time.Now())
-			h.ServeHTTP(w.Raw(), r.Raw())
+			h.Next(w, r)
 		}
 	}
 }

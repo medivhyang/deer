@@ -1,14 +1,10 @@
 # Deer
 
-Deer is a go http libary, not framework.
+A go language http library using decorators.
 
 ## Why Deer
 
-1. Lightweight, not much new concept.
-2. Less intrusion, just libary, not framework.
-3. Native, compatible with standard libary.
-4. Rich features, support group route, path params, and middleware etc.
-5. Efficient, follow engineering practice.
+Lightweight、lower dependence and efficient.
 
 ## Quick Start
 
@@ -18,6 +14,7 @@ Hello World
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/medivhyang/deer"
@@ -31,7 +28,7 @@ func main() {
 		w.Text(http.StatusOK, "hello world")
 	})
 
-	r.Run(":8080")
+	log.Fatalln(r.Run(":8080"))
 }
 ```
 
