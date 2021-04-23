@@ -6,7 +6,12 @@ import (
 	"encoding/xml"
 	"net/http"
 
-	"github.com/medivhyang/deer/internal/binding"
+	"github.com/medivhyang/duck/naming"
+	"github.com/medivhyang/ice"
+)
+
+const (
+	bindingTagKey = "binding"
 )
 
 func WrapRequest(r *http.Request) *Request {
@@ -177,21 +182,45 @@ func (r *Request) BindXML(i interface{}) error {
 }
 
 func (r *Request) BindQuery(i interface{}) error {
-	return binding.BindUrlValues(r.raw.URL.Query(), i)
+	m := ice.ParseStructTag(i, bindingTagKey)
+	return ice.BindStructFunc(i, func(s string) []string {
+		if v, ok := m[s]; ok {
+			s = v
+		} else {
+			s = naming.ToSnake(s)
+		}
+		return r.raw.URL.Query()[s]
+	})
 }
 
 func (r *Request) BindPostForm(i interface{}) error {
 	if err := r.raw.ParseForm(); err != nil {
 		return err
 	}
-	return binding.BindUrlValues(r.raw.PostForm, i)
+	m := ice.ParseStructTag(i, bindingTagKey)
+	return ice.BindStructFunc(i, func(s string) []string {
+		if v, ok := m[s]; ok {
+			s = v
+		} else {
+			s = naming.ToSnake(s)
+		}
+		return r.raw.PostForm[s]
+	})
 }
 
 func (r *Request) BindForm(i interface{}) error {
 	if err := r.raw.ParseForm(); err != nil {
 		return err
 	}
-	return binding.BindUrlValues(r.raw.Form, i)
+	m := ice.ParseStructTag(i, bindingTagKey)
+	return ice.BindStructFunc(i, func(s string) []string {
+		if v, ok := m[s]; ok {
+			s = v
+		} else {
+			s = naming.ToSnake(s)
+		}
+		return r.raw.Form[s]
+	})
 }
 
 func (r *Request) BasicAuth() (username string, password string, ok bool) {

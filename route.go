@@ -140,12 +140,12 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if method == http.MethodOptions {
 			e = &entry{
 				method:  http.MethodOptions,
-				handler: optionsHandlerFunc,
+				handler: defaultOptionsHandler,
 			}
 		} else {
 			e = &entry{
 				method:  method,
-				handler: notFoundHandlerFunc,
+				handler: defaultNotFoundHandler,
 			}
 		}
 	}
@@ -386,12 +386,12 @@ func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Midd
 	return g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 
-func optionsHandlerFunc(w ResponseWriter, r *Request) {
+func defaultOptionsHandler(w ResponseWriter, r *Request) {
 	w.Header("Content-Length", "0")
 	w.StatusCode(http.StatusNoContent)
 }
 
-func notFoundHandlerFunc(w ResponseWriter, r *Request) {
+func defaultNotFoundHandler(w ResponseWriter, r *Request) {
 	w.Text(http.StatusNotFound, http.StatusText(http.StatusNotFound))
 }
 
