@@ -31,52 +31,12 @@ type RequestTemplate struct {
 	Headers map[string]string
 }
 
-func (t *RequestTemplate) NewBuilder() *RequestBuilder {
+func (t *RequestTemplate) New() *RequestBuilder {
 	return NewBuilder().Client(t.Client).Prefix(t.Prefix).Headers(t.Headers).Queries(t.Queries)
 }
 
 func NewBuilder() *RequestBuilder {
 	return &RequestBuilder{}
-}
-
-func Get(path string) *RequestBuilder {
-	return NewBuilder().Get(path)
-}
-
-func GetJSON(path string, result interface{}) error {
-	return NewBuilder().GetJSON(path, result)
-}
-
-func GetText(path string) (string, error) {
-	return NewBuilder().GetText(path)
-}
-
-func GetFile(path string, filename string) error {
-	return NewBuilder().GetFile(path, filename)
-}
-
-func GetStream(path string) (io.ReadCloser, error) {
-	return NewBuilder().GetStream(path)
-}
-
-func Post(path string) *RequestBuilder {
-	return NewBuilder().Post(path)
-}
-
-func Put(path string) *RequestBuilder {
-	return NewBuilder().Put(path)
-}
-
-func Delete(path string) *RequestBuilder {
-	return NewBuilder().Delete(path)
-}
-
-func Patch(path string) *RequestBuilder {
-	return NewBuilder().Patch(path)
-}
-
-func Options(path string) *RequestBuilder {
-	return NewBuilder().Options(path)
 }
 
 func (b *RequestBuilder) Client(client *http.Client) *RequestBuilder {
@@ -103,7 +63,7 @@ func (b *RequestBuilder) GetText(path string) (string, error) {
 	return b.Get(path).Text()
 }
 
-func (b *RequestBuilder) GetFile(path string, filename string) error {
+func (b *RequestBuilder) SaveFile(path string, filename string) error {
 	return b.Get(path).File(filename)
 }
 
@@ -228,7 +188,7 @@ func (b *RequestBuilder) Do(client ...*http.Client) Response {
 		return ErrorResponse(b.err)
 	}
 
-	aURL := b.url()
+	aURL := b.generateURL()
 	if aURL == "" {
 		return ErrorResponse(fmt.Errorf("deer: http client: require url"))
 	}
@@ -281,14 +241,14 @@ func (b *RequestBuilder) Stream() (io.ReadCloser, error) {
 }
 
 func (b *RequestBuilder) Pipe(writer io.Writer) error {
-	return b.Do().Write(writer)
+	return b.Do().Pipe(writer)
 }
 
 func (b *RequestBuilder) File(filename string) error {
-	return b.Do().WriteFile(filename)
+	return b.Do().SaveFile(filename)
 }
 
-func (b *RequestBuilder) url() string {
+func (b *RequestBuilder) generateURL() string {
 	s := b.prefix + b.path
 	if strings.Contains(s, "?") {
 		s += "&"

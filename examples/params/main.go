@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/medivhyang/deer"
@@ -21,6 +20,4 @@ func main() {
 	r.Get("/static/*filename", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("filename = %s", r.Param("filename")))
 	})
-
-	log.Fatalln(r.Run(":8080"))
 }

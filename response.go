@@ -20,8 +20,8 @@ type Response interface {
 	Text() (string, error)
 	JSON(value interface{}) error
 	XML(value interface{}) error
-	Write(writer io.Writer) error
-	WriteFile(filename string) error
+	Pipe(writer io.Writer) error
+	SaveFile(filename string) error
 	Dump(body bool) ([]byte, error)
 }
 
@@ -45,7 +45,7 @@ func (r *response) Dump(body bool) ([]byte, error) {
 	return httputil.DumpResponse(r.raw, body)
 }
 
-func (r *response) Write(writer io.Writer) error {
+func (r *response) Pipe(writer io.Writer) error {
 	if r.read {
 		return ErrResponseBodyHasRead
 	}
@@ -59,7 +59,7 @@ func (r *response) Write(writer io.Writer) error {
 	return nil
 }
 
-func (r *response) WriteFile(filename string) error {
+func (r *response) SaveFile(filename string) error {
 	if r.read {
 		return ErrResponseBodyHasRead
 	}
@@ -179,11 +179,11 @@ func (r *errResponse) XML(value interface{}) error {
 	return r.err
 }
 
-func (r *errResponse) Write(writer io.Writer) error {
+func (r *errResponse) Pipe(writer io.Writer) error {
 	return r.err
 }
 
-func (r *errResponse) WriteFile(filename string) error {
+func (r *errResponse) SaveFile(filename string) error {
 	return r.err
 }
 

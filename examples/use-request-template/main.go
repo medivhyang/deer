@@ -7,7 +7,7 @@ import (
 
 func main() {
 	t := &deer.RequestTemplate{}
-	content, err := t.NewBuilder().GetText("https://baidu.com")
+	content, err := t.New().GetText("https://baidu.com")
 	if err != nil {
 		panic(err)
 	}

@@ -7,6 +7,15 @@ import (
 	"net/http"
 )
 
+const (
+	headerContentType = "Content-Type"
+
+	mimeText = "text/plain"
+	mimeHTML = "text/html"
+	mimeJSON = "application/json"
+	mimeXML  = "application/xml"
+)
+
 type ResponseWriter interface {
 	Raw() http.ResponseWriter
 	StatusCode(statusCode int)
@@ -39,7 +48,7 @@ func (w *responseWriter) Header(key string, value string) *responseWriter {
 }
 
 func (w *responseWriter) Text(statusCode int, text string) {
-	w.raw.Header().Set("Content-Type", "text/plain")
+	w.raw.Header().Set(headerContentType, mimeText)
 	w.raw.WriteHeader(statusCode)
 	if _, err := io.WriteString(w.raw, text); err != nil {
 		panic(err)
@@ -47,7 +56,7 @@ func (w *responseWriter) Text(statusCode int, text string) {
 }
 
 func (w *responseWriter) HTML(statusCode int, content string) {
-	w.raw.Header().Set("Content-Type", "text/html")
+	w.raw.Header().Set(headerContentType, mimeHTML)
 	w.raw.WriteHeader(statusCode)
 	if _, err := io.WriteString(w.raw, content); err != nil {
 		panic(err)
@@ -55,7 +64,7 @@ func (w *responseWriter) HTML(statusCode int, content string) {
 }
 
 func (w *responseWriter) JSON(statusCode int, value interface{}) {
-	w.raw.Header().Set("Content-Type", "application/json")
+	w.raw.Header().Set(headerContentType, mimeJSON)
 	w.raw.WriteHeader(statusCode)
 	if err := json.NewEncoder(w.raw).Encode(value); err != nil {
 		panic(err)
@@ -63,7 +72,7 @@ func (w *responseWriter) JSON(statusCode int, value interface{}) {
 }
 
 func (w *responseWriter) XML(statusCode int, value interface{}) {
-	w.raw.Header().Set("Content-Type", "application/xml")
+	w.raw.Header().Set(headerContentType, mimeXML)
 	w.raw.WriteHeader(statusCode)
 	if err := xml.NewEncoder(w.raw).Encode(value); err != nil {
 		panic(err)
