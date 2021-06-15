@@ -15,40 +15,36 @@ const (
 )
 
 func WrapRequest(r *http.Request) *Request {
-	return &Request{raw: r}
+	return &Request{Raw: r}
 }
 
 type Request struct {
-	raw    *http.Request
+	Raw    *http.Request
 	params map[string]string
 }
 
-func (r *Request) Raw() *http.Request {
-	return r.raw
-}
-
 func (r *Request) Context() context.Context {
-	return r.raw.Context()
+	return r.Raw.Context()
 }
 
 func (r *Request) SetContext(ctx context.Context) {
-	r.raw = r.raw.WithContext(ctx)
+	r.Raw = r.Raw.WithContext(ctx)
 }
 
 func (r *Request) Method() string {
-	return r.raw.Method
+	return r.Raw.Method
 }
 
 func (r *Request) Path() string {
-	return r.raw.URL.Path
+	return r.Raw.URL.Path
 }
 
 func (r *Request) Header(key string) string {
-	return r.raw.Header.Get(key)
+	return r.Raw.Header.Get(key)
 }
 
 func (r *Request) HeaderOrDefault(key string, value string) string {
-	result := r.raw.Header.Get(key)
+	result := r.Raw.Header.Get(key)
 	if result == "" {
 		return value
 	}
@@ -56,18 +52,18 @@ func (r *Request) HeaderOrDefault(key string, value string) string {
 }
 
 func (r *Request) HeaderExists(key string) bool {
-	if r.raw.Header == nil {
+	if r.Raw.Header == nil {
 		return false
 	}
-	return len(r.raw.Header[key]) > 0
+	return len(r.Raw.Header[key]) > 0
 }
 
 func (r *Request) SetHeader(key string, value string) {
-	r.raw.Header.Set(key, value)
+	r.Raw.Header.Set(key, value)
 }
 
 func (r *Request) Cookie(key string) (string, error) {
-	cookie, err := r.raw.Cookie(key)
+	cookie, err := r.Raw.Cookie(key)
 	if err != nil {
 		return "", err
 	}
@@ -75,11 +71,11 @@ func (r *Request) Cookie(key string) (string, error) {
 }
 
 func (r *Request) AddCooke(cookie *http.Cookie) {
-	r.raw.AddCookie(cookie)
+	r.Raw.AddCookie(cookie)
 }
 
 func (r *Request) CookieOrDefault(key string, defaultValue ...string) string {
-	cookie, err := r.raw.Cookie(key)
+	cookie, err := r.Raw.Cookie(key)
 	if err != nil {
 		if err == http.ErrNoCookie {
 			if len(defaultValue) > 0 {
@@ -93,7 +89,7 @@ func (r *Request) CookieOrDefault(key string, defaultValue ...string) string {
 }
 
 func (r *Request) CookieExists(key string) bool {
-	_, err := r.raw.Cookie(key)
+	_, err := r.Raw.Cookie(key)
 	if err != nil {
 		if err == http.ErrNoCookie {
 			return false
@@ -105,14 +101,14 @@ func (r *Request) CookieExists(key string) bool {
 
 func (r *Request) Param(key string) string {
 	if r.params == nil {
-		r.params = Params(r.raw)
+		r.params = Params(r.Raw)
 	}
 	return r.params[key]
 }
 
 func (r *Request) ParamOrDefault(key string, value string) string {
 	if r.params == nil {
-		r.params = Params(r.raw)
+		r.params = Params(r.Raw)
 	}
 	result := r.params[key]
 	if result == "" {
@@ -123,18 +119,18 @@ func (r *Request) ParamOrDefault(key string, value string) string {
 
 func (r *Request) ParamExists(key string) bool {
 	if r.params == nil {
-		r.params = Params(r.raw)
+		r.params = Params(r.Raw)
 	}
 	_, ok := r.params[key]
 	return ok
 }
 
 func (r *Request) Query(key string) string {
-	return r.raw.URL.Query().Get(key)
+	return r.Raw.URL.Query().Get(key)
 }
 
 func (r *Request) QueryOrDefault(key string, value string) string {
-	result := r.raw.URL.Query().Get(key)
+	result := r.Raw.URL.Query().Get(key)
 	if result == "" {
 		return value
 	}
@@ -142,7 +138,7 @@ func (r *Request) QueryOrDefault(key string, value string) string {
 }
 
 func (r *Request) QueryExists(key string) bool {
-	values := r.raw.URL.Query()
+	values := r.Raw.URL.Query()
 	if values == nil {
 		return false
 	}
@@ -150,35 +146,35 @@ func (r *Request) QueryExists(key string) bool {
 }
 
 func (r *Request) PostForm(key string) string {
-	return r.raw.PostFormValue(key)
+	return r.Raw.PostFormValue(key)
 }
 
 func (r *Request) PostFormExists(key string) bool {
-	_ = r.raw.ParseForm()
-	if r.raw.PostForm == nil {
+	_ = r.Raw.ParseForm()
+	if r.Raw.PostForm == nil {
 		return false
 	}
-	return len(r.raw.PostForm[key]) > 0
+	return len(r.Raw.PostForm[key]) > 0
 }
 
 func (r *Request) Form(key string) string {
-	return r.raw.FormValue(key)
+	return r.Raw.FormValue(key)
 }
 
 func (r *Request) FormExists(key string) bool {
-	_ = r.raw.ParseForm()
-	if r.raw.Form == nil {
+	_ = r.Raw.ParseForm()
+	if r.Raw.Form == nil {
 		return false
 	}
-	return len(r.raw.Form[key]) > 0
+	return len(r.Raw.Form[key]) > 0
 }
 
 func (r *Request) BindJSON(i interface{}) error {
-	return json.NewDecoder(r.raw.Body).Decode(i)
+	return json.NewDecoder(r.Raw.Body).Decode(i)
 }
 
 func (r *Request) BindXML(i interface{}) error {
-	return xml.NewDecoder(r.raw.Body).Decode(i)
+	return xml.NewDecoder(r.Raw.Body).Decode(i)
 }
 
 func (r *Request) BindQuery(i interface{}) error {
@@ -189,12 +185,12 @@ func (r *Request) BindQuery(i interface{}) error {
 		} else {
 			s = naming.ToSnake(s)
 		}
-		return r.raw.URL.Query()[s]
+		return r.Raw.URL.Query()[s]
 	})
 }
 
 func (r *Request) BindPostForm(i interface{}) error {
-	if err := r.raw.ParseForm(); err != nil {
+	if err := r.Raw.ParseForm(); err != nil {
 		return err
 	}
 	m := ice.ParseStructTag(i, bindingTagKey)
@@ -204,12 +200,12 @@ func (r *Request) BindPostForm(i interface{}) error {
 		} else {
 			s = naming.ToSnake(s)
 		}
-		return r.raw.PostForm[s]
+		return r.Raw.PostForm[s]
 	})
 }
 
 func (r *Request) BindForm(i interface{}) error {
-	if err := r.raw.ParseForm(); err != nil {
+	if err := r.Raw.ParseForm(); err != nil {
 		return err
 	}
 	m := ice.ParseStructTag(i, bindingTagKey)
@@ -219,14 +215,14 @@ func (r *Request) BindForm(i interface{}) error {
 		} else {
 			s = naming.ToSnake(s)
 		}
-		return r.raw.Form[s]
+		return r.Raw.Form[s]
 	})
 }
 
 func (r *Request) BasicAuth() (username string, password string, ok bool) {
-	return r.raw.BasicAuth()
+	return r.Raw.BasicAuth()
 }
 
 func (r *Request) SetBasicAuth(username string, password string) {
-	r.raw.SetBasicAuth(username, password)
+	r.Raw.SetBasicAuth(username, password)
 }

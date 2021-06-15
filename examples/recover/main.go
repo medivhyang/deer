@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/medivhyang/deer"
-	"github.com/medivhyang/deer/middlewares"
 	"log"
+
+	"github.com/medivhyang/deer"
 )
 
 func main() {
-	r := deer.NewRouter().Use(middlewares.Trace(), middlewares.Recovery())
+	r := deer.NewRouter().Use(deer.Trace(), deer.Recovery())
 
 	r.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
 		panic("1")

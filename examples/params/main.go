@@ -5,11 +5,10 @@ import (
 	"net/http"
 
 	"github.com/medivhyang/deer"
-	"github.com/medivhyang/deer/middlewares"
 )
 
 func main() {
-	r := deer.NewRouter().Use(middlewares.Trace())
+	r := deer.NewRouter().Use(deer.Trace())
 
 	r.Get("/orgs/:oid", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, fmt.Sprintf("oid = %s", r.Param("oid")))

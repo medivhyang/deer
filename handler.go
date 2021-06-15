@@ -9,5 +9,5 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h HandlerFunc) Next(w ResponseWriter, r *Request) {
-	h.ServeHTTP(w.Raw(), r.Raw())
+	h.ServeHTTP(w.Raw(), r.Raw)
 }

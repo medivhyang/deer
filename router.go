@@ -10,37 +10,39 @@ import (
 	"strings"
 )
 
-type Router struct {
-	prefix          string
-	entryMap        map[key]*entry
-	entries         []*entry
-	middlewares     []Middleware
-	notFoundHandler HandlerFunc
-}
+// region router
 
-type key struct {
-	method string
-	path   string
-}
-
-type entry struct {
-	method      string
-	pattern     string
-	handler     HandlerFunc
-	middlewares []Middleware
-	regexp      *regexp.Regexp
-}
+type (
+	Router struct {
+		prefix          string
+		entryMap        map[key]*entry
+		entries         []*entry
+		middlewares     []Middleware
+		notFoundHandler HandlerFunc
+	}
+	key struct {
+		method string
+		path   string
+	}
+	entry struct {
+		method      string
+		pattern     string
+		handler     HandlerFunc
+		middlewares []Middleware
+		regexp      *regexp.Regexp
+	}
+)
 
 func (e *entry) regexpMatch(path string) bool {
 	if e.regexp == nil {
-		e.regexp = regexp.MustCompile(toRegexp(e.pattern))
+		e.regexp = regexp.MustCompile(parsePatternToRegexp(e.pattern))
 	}
 	return e.regexp.MatchString(path)
 }
 
 func (e *entry) params(path string) map[string]string {
 	if e.regexp == nil {
-		e.regexp = regexp.MustCompile(toRegexp(e.pattern))
+		e.regexp = regexp.MustCompile(parsePatternToRegexp(e.pattern))
 	}
 	matches := e.regexp.FindStringSubmatch(path)
 	names := e.regexp.SubexpNames()
@@ -51,18 +53,6 @@ func (e *entry) params(path string) map[string]string {
 		}
 	}
 	return result
-}
-
-var (
-	namedParamRegexp    = regexp.MustCompile(":([^/]+)")
-	wildcardParamRegexp = regexp.MustCompile("\\*([^/]+)")
-)
-
-func toRegexp(pattern string) string {
-	s := namedParamRegexp.ReplaceAllString(pattern, "(?P<$1>[^/]+)")
-	s = wildcardParamRegexp.ReplaceAllString(s, "(?P<$1>.*)")
-	s = "^" + s + "$"
-	return s
 }
 
 func NewRouter() *Router {
@@ -140,18 +130,18 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if method == http.MethodOptions {
 			e = &entry{
 				method:  http.MethodOptions,
-				handler: defaultOptionsHandler,
+				handler: defaultOptionsHandleFunc,
 			}
 		} else {
 			e = &entry{
 				method:  method,
-				handler: defaultNotFoundHandler,
+				handler: defaultNotFoundHandleFunc,
 			}
 		}
 	}
 	finalMiddlewares := append([]Middleware{}, router.middlewares...)
 	finalMiddlewares = append(finalMiddlewares, e.middlewares...)
-	h := Chain(e.handler, finalMiddlewares...)
+	h := chain(e.handler, finalMiddlewares...)
 	h.ServeHTTP(w, r)
 }
 
@@ -203,12 +193,6 @@ type EntryView struct {
 	Pattern string `json:"pattern"`
 }
 
-type sortedEntrySlice []*entry
-
-func (s sortedEntrySlice) Len() int {
-	return len(s)
-}
-
 var methodOrders = map[string]int{
 	"":                 0,
 	http.MethodGet:     1,
@@ -222,25 +206,19 @@ var methodOrders = map[string]int{
 	http.MethodTrace:   9,
 }
 
-func (s sortedEntrySlice) Less(i, j int) bool {
-	if s[i].pattern != s[j].pattern {
-		return s[i].pattern < s[j].pattern
-	}
-	mi := strings.ToUpper(s[i].method)
-	mj := strings.ToUpper(s[j].method)
-	return methodOrders[mi] < methodOrders[mj]
-}
-
-func (s sortedEntrySlice) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
 func (router *Router) Items() []EntryView {
-	copies := append([]*entry{}, router.entries...)
-	sort.Sort(sortedEntrySlice(copies))
+	items := append([]*entry{}, router.entries...)
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].pattern != items[j].pattern {
+			return items[i].pattern < items[j].pattern
+		}
+		mi := strings.ToUpper(items[i].method)
+		mj := strings.ToUpper(items[j].method)
+		return methodOrders[mi] < methodOrders[mj]
+	})
 	var result []EntryView
-	for _, entry := range copies {
-		method, pattern := entry.method, entry.pattern
+	for _, item := range items {
+		method, pattern := item.method, item.pattern
 		if method == "" {
 			method = "ANY"
 		}
@@ -266,59 +244,9 @@ func (router *Router) Run(addr string) error {
 	return http.ListenAndServe(addr, router)
 }
 
-func normalizePath(p string) string {
-	if p == "" {
-		return "/"
-	}
-	if p[0] != '/' {
-		return "/" + p
-	}
-	return p
-}
+// endregion
 
-func normalizePrefix(p string) string {
-	p = strings.TrimRight(p, "/")
-	if p == "" {
-		return ""
-	}
-	if p[0] != '/' {
-		return "/" + p
-	}
-	return p
-}
-
-func appendSorted(es []*entry, e *entry) []*entry {
-	n := len(es)
-	findIndex := sort.Search(n, func(i int) bool {
-		return es[i].method == e.method && es[i].pattern == e.pattern
-	})
-	if findIndex < n {
-		es[findIndex] = e
-		return es
-	}
-	smallestIndex := sort.Search(n, func(i int) bool {
-		l1 := len(strings.Split(es[i].pattern, "/"))
-		l2 := len(strings.Split(e.pattern, "/"))
-		if l1 != l2 {
-			return l1 < l2
-		}
-		return len(es[i].pattern) < len(e.pattern)
-	})
-	if smallestIndex == n {
-		return append(es, e)
-	}
-	es = append(es, nil)
-	copy(es[smallestIndex+1:], es[smallestIndex:])
-	es[smallestIndex] = e
-	return es
-}
-
-func Chain(h HandlerFunc, middlewares ...Middleware) HandlerFunc {
-	for i := len(middlewares) - 1; i >= 0; i-- {
-		h = middlewares[i](h)
-	}
-	return h
-}
+// region router group
 
 type group struct {
 	router      *Router
@@ -386,14 +314,9 @@ func (g *group) Options(pattern string, handler HandlerFunc, middlewares ...Midd
 	return g.Handle(http.MethodOptions, pattern, handler, middlewares...)
 }
 
-func defaultOptionsHandler(w ResponseWriter, r *Request) {
-	w.Header("Content-Length", "0")
-	w.StatusCode(http.StatusNoContent)
-}
+// endregion
 
-func defaultNotFoundHandler(w ResponseWriter, r *Request) {
-	w.Text(http.StatusNotFound, http.StatusText(http.StatusNotFound))
-}
+// region params
 
 type paramsContextKey struct{}
 
@@ -406,3 +329,84 @@ func Params(r *http.Request) map[string]string {
 	}
 	return map[string]string{}
 }
+
+// endregion
+
+// region utils
+
+var (
+	namedParamRegexp    = regexp.MustCompile(":([^/]+)")
+	wildcardParamRegexp = regexp.MustCompile("\\*([^/]+)")
+)
+
+func parsePatternToRegexp(pattern string) string {
+	s := namedParamRegexp.ReplaceAllString(pattern, "(?P<$1>[^/]+)")
+	s = wildcardParamRegexp.ReplaceAllString(s, "(?P<$1>.*)")
+	s = "^" + s + "$"
+	return s
+}
+
+func defaultOptionsHandleFunc(w ResponseWriter, r *Request) {
+	w.Header("Content-Length", "0")
+	w.StatusCode(http.StatusNoContent)
+}
+
+func defaultNotFoundHandleFunc(w ResponseWriter, r *Request) {
+	w.Text(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+}
+
+func normalizePath(p string) string {
+	if p == "" {
+		return "/"
+	}
+	if p[0] != '/' {
+		return "/" + p
+	}
+	return p
+}
+
+func normalizePrefix(p string) string {
+	p = strings.TrimRight(p, "/")
+	if p == "" {
+		return ""
+	}
+	if p[0] != '/' {
+		return "/" + p
+	}
+	return p
+}
+
+func appendSorted(es []*entry, e *entry) []*entry {
+	n := len(es)
+	findIndex := sort.Search(n, func(i int) bool {
+		return es[i].method == e.method && es[i].pattern == e.pattern
+	})
+	if findIndex < n {
+		es[findIndex] = e
+		return es
+	}
+	smallestIndex := sort.Search(n, func(i int) bool {
+		l1 := len(strings.Split(es[i].pattern, "/"))
+		l2 := len(strings.Split(e.pattern, "/"))
+		if l1 != l2 {
+			return l1 < l2
+		}
+		return len(es[i].pattern) < len(e.pattern)
+	})
+	if smallestIndex == n {
+		return append(es, e)
+	}
+	es = append(es, nil)
+	copy(es[smallestIndex+1:], es[smallestIndex:])
+	es[smallestIndex] = e
+	return es
+}
+
+func chain(h HandlerFunc, middlewares ...Middleware) HandlerFunc {
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		h = middlewares[i](h)
+	}
+	return h
+}
+
+// endregion

@@ -3,7 +3,6 @@ package deer
 import (
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -11,100 +10,81 @@ import (
 	"os"
 )
 
-var ErrResponseBodyHasRead = errors.New("deer: http response: body has read")
+var ErrResponseBodyHasRead = newError("http response", "body has read")
 
-type Response interface {
-	Raw() (*http.Response, error)
-	Stream() (io.ReadCloser, error)
-	Bytes() ([]byte, error)
-	Text() (string, error)
-	JSON(value interface{}) error
-	XML(value interface{}) error
-	Pipe(writer io.Writer) error
-	SaveFile(filename string) error
-	Dump(body bool) ([]byte, error)
+func WrapResponse(r *http.Response) *Response {
+	return &Response{Raw: r}
 }
 
-func WrapResponse(r *http.Response) Response {
-	return &response{raw: r}
-}
-
-type response struct {
-	raw  *http.Response
+type Response struct {
+	Raw  *http.Response
 	read bool
 }
 
-func (r *response) Raw() (*http.Response, error) {
-	if r.read {
-		return nil, ErrResponseBodyHasRead
-	}
-	return r.raw, nil
+func (r *Response) Dump(body bool) ([]byte, error) {
+	return httputil.DumpResponse(r.Raw, body)
 }
 
-func (r *response) Dump(body bool) ([]byte, error) {
-	return httputil.DumpResponse(r.raw, body)
-}
-
-func (r *response) Pipe(writer io.Writer) error {
+func (r *Response) Pipe(writer io.Writer) error {
 	if r.read {
 		return ErrResponseBodyHasRead
 	}
 	defer func() {
-		r.raw.Body.Close()
+		r.Raw.Body.Close()
 		r.read = true
 	}()
-	if _, err := io.Copy(writer, r.raw.Body); err != nil {
+	if _, err := io.Copy(writer, r.Raw.Body); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *response) SaveFile(filename string) error {
+func (r *Response) SaveFile(filename string) error {
 	if r.read {
 		return ErrResponseBodyHasRead
 	}
 	defer func() {
-		r.raw.Body.Close()
+		r.Raw.Body.Close()
 		r.read = true
 	}()
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
-	if _, err := io.Copy(file, r.raw.Body); err != nil {
+	if _, err := io.Copy(file, r.Raw.Body); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *response) Stream() (io.ReadCloser, error) {
+func (r *Response) Stream() (io.ReadCloser, error) {
 	if r.read {
 		return nil, ErrResponseBodyHasRead
 	}
-	return r.raw.Body, nil
+	return r.Raw.Body, nil
 }
 
-func (r *response) Bytes() ([]byte, error) {
+func (r *Response) Bytes() ([]byte, error) {
 	if r.read {
 		return nil, ErrResponseBodyHasRead
 	}
 	defer func() {
-		r.raw.Body.Close()
+		r.Raw.Body.Close()
 		r.read = true
 	}()
-	content, err := ioutil.ReadAll(r.raw.Body)
+	content, err := ioutil.ReadAll(r.Raw.Body)
 	if err != nil {
 		return nil, err
 	}
 	return content, nil
 }
 
-func (r *response) Text() (string, error) {
+func (r *Response) Text() (string, error) {
 	if r.read {
 		return "", ErrResponseBodyHasRead
 	}
 	defer func() {
-		r.raw.Body.Close()
+		r.Raw.Body.Close()
 		r.read = true
 	}()
 	bs, err := r.Bytes()
@@ -114,79 +94,24 @@ func (r *response) Text() (string, error) {
 	return string(bs), nil
 }
 
-func (r *response) JSON(value interface{}) error {
+func (r *Response) JSON(value interface{}) error {
 	if r.read {
 		return ErrResponseBodyHasRead
 	}
 	defer func() {
-		r.raw.Body.Close()
+		r.Raw.Body.Close()
 		r.read = true
 	}()
-	return json.NewDecoder(r.raw.Body).Decode(value)
+	return json.NewDecoder(r.Raw.Body).Decode(value)
 }
 
-func (r *response) XML(value interface{}) error {
+func (r *Response) XML(value interface{}) error {
 	if r.read {
 		return ErrResponseBodyHasRead
 	}
 	defer func() {
-		r.raw.Body.Close()
+		r.Raw.Body.Close()
 		r.read = true
 	}()
-	return xml.NewDecoder(r.raw.Body).Decode(value)
-}
-
-type errResponse struct {
-	err error
-}
-
-func ErrorResponse(err error) Response {
-	if err == nil {
-		err = errors.New("deer: err response: unspecified error")
-	}
-	return &errResponse{err: err}
-}
-
-func (r *errResponse) Raw() (*http.Response, error) {
-	return nil, r.err
-}
-
-func (r *errResponse) Stream() (io.ReadCloser, error) {
-	return nil, r.err
-}
-
-func (r *errResponse) Bytes() ([]byte, error) {
-	return nil, r.err
-}
-
-func (r *errResponse) Text() (string, error) {
-	return "", r.err
-}
-
-func (r *errResponse) BindWithJSON(value interface{}) error {
-	return r.err
-}
-
-func (r *errResponse) BindWithXML(value interface{}) error {
-	return r.err
-}
-
-func (r *errResponse) JSON(value interface{}) error {
-	return r.err
-}
-
-func (r *errResponse) XML(value interface{}) error {
-	return r.err
-}
-
-func (r *errResponse) Pipe(writer io.Writer) error {
-	return r.err
-}
-
-func (r *errResponse) SaveFile(filename string) error {
-	return r.err
-}
-
-func (r *errResponse) Dump(body bool) ([]byte, error) {
-	return nil, r.err
+	return xml.NewDecoder(r.Raw.Body).Decode(value)
 }
