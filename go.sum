@@ -1,12 +1,5 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/cheekybits/genny v1.0.0/go.mod h1:+tQajlRqAUrPI7DOSpB0XAqZYtQakVtB7wXkRAgjxjQ=
-github.com/medivhyang/duck v0.0.7 h1:IsXVdUgQaJVPoK2vslqQVdN44jEd6rykO5Lx+e1jLds=
-github.com/medivhyang/duck v0.0.7/go.mod h1:KEBswG+K6ZVT0reoKIJmB2rhQ3NyEoP/qOuejs8DkHc=
-github.com/medivhyang/duck v0.0.8 h1:rPhs7iNocfs96F2KsOWa6MEezbA70lzxlRblURiSvlE=
-github.com/medivhyang/duck v0.0.8/go.mod h1:KEBswG+K6ZVT0reoKIJmB2rhQ3NyEoP/qOuejs8DkHc=
-github.com/medivhyang/ice v0.0.3 h1:gkBDgI0hQzKleShpN8IJdD0LLHYgSf88W3GlVXfEgfY=
-github.com/medivhyang/ice v0.0.3/go.mod h1:kOQHybl4KN6MA7n5bcbWxOx9tWySeOKkVOUGiMUWJ2Y=
-github.com/medivhyang/ice v0.0.5 h1:oPMYQ1ihLPCaY+ozKxEMOp+cOM55en4axJUbqrrb/0M=
-github.com/medivhyang/ice v0.0.5/go.mod h1:kOQHybl4KN6MA7n5bcbWxOx9tWySeOKkVOUGiMUWJ2Y=
+github.com/medivhyang/duck v0.0.9 h1:FjVUsZh8iN3pggFExyYdhERi2kKZtZxFv7zNrTZ0xw8=
+github.com/medivhyang/duck v0.0.9/go.mod h1:0ZeK6Q76/EA7+w8kLHBGziMnEcTv7gbFuLv3HPU2sRY=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.3.0/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
