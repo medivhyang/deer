@@ -18,11 +18,12 @@ import (
 	"net/http"
 
 	"github.com/medivhyang/deer"
-	"github.com/medivhyang/deer/middlewares"
 )
 
 func main() {
-	r := deer.NewRouter().Use(middlewares.Trace())
+	deer.Debug(true)
+
+	r := deer.Default()
 
 	r.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
 		w.Text(http.StatusOK, "hello world")
@@ -32,23 +33,4 @@ func main() {
 }
 ```
 
-Http Client
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/medivhyang/deer"
-)
-
-func main() {
-	text, err := deer.GetText("https://baidu.com")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(text)
-}
-```
-
-More examples references `/examples` directory.
+> More examples references `/examples` directory.

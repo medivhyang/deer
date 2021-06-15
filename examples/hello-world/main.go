@@ -8,6 +8,8 @@ import (
 )
 
 func main() {
+	deer.Debug(true)
+
 	r := deer.Default()
 
 	r.Get("/", func(w deer.ResponseWriter, r *deer.Request) {

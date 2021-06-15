@@ -3,25 +3,34 @@ package deer
 import (
 	"fmt"
 	"io"
+	"os"
 )
 
 var (
-	LogWriter io.Writer
-	Debug     = false
+	debugFlag             = false
+	debugWriter io.Writer = os.Stdout
 )
+
+func Debug(b bool) {
+	debugFlag = b
+}
+
+func Output(writer io.Writer) {
+	debugWriter = writer
+}
 
 func Default() *Router {
 	return NewRouter().Use(Recovery(), Trace())
 }
 
 func debugf(format string, args ...interface{}) {
-	if !Debug {
+	if !debugFlag {
 		return
 	}
-	if LogWriter == nil {
+	if debugWriter == nil {
 		return
 	}
-	if _, err := fmt.Fprintf(LogWriter, format, args...); err != nil {
+	if _, err := fmt.Fprintln(debugWriter, fmt.Sprintf(format, args...)); err != nil {
 		panic(err)
 	}
 }
