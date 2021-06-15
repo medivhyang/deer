@@ -8,9 +8,6 @@ import (
 )
 
 func main() {
-	deer.Default().Use(deer.Recovery(func(w deer.ResponseWriter, r *deer.Request, err interface{}) {
-
-	}))
 	r := deer.Default()
 
 	r.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
