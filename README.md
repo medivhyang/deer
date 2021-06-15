@@ -4,11 +4,9 @@ A go language http library using decorators.
 
 ## Why Deer
 
-Lightweight、lower dependence and efficient.
+Lightweight, lower dependence and efficient.
 
 ## Quick Start
-
-Hello World
 
 ```go
 package main
