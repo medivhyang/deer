@@ -7,7 +7,8 @@ import (
 )
 
 func main() {
-	r := deer.NewRouter().Use(deer.Trace(), deer.Recovery())
+	deer.Debug(true)
+	r := deer.NewRouter().Use(deer.Recovery(), deer.Trace())
 
 	r.Get("/", func(w deer.ResponseWriter, r *deer.Request) {
 		panic("1")
