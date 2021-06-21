@@ -6,8 +6,8 @@ import (
 	"encoding/xml"
 	"net/http"
 
-	"github.com/medivhyang/duck/ice"
 	"github.com/medivhyang/duck/naming"
+	"github.com/medivhyang/duck/reflectutil"
 )
 
 const (
@@ -178,8 +178,8 @@ func (r *Request) BindXML(i interface{}) error {
 }
 
 func (r *Request) BindQuery(i interface{}) error {
-	m := ice.ParseStructTag(i, bindingTagKey)
-	return ice.BindStructFunc(i, func(s string) []string {
+	m := reflectutil.ParseStructTag(i, bindingTagKey)
+	return reflectutil.BindStructFunc(i, func(s string) []string {
 		if v, ok := m[s]; ok {
 			s = v
 		} else {
@@ -193,8 +193,8 @@ func (r *Request) BindPostForm(i interface{}) error {
 	if err := r.Raw.ParseForm(); err != nil {
 		return err
 	}
-	m := ice.ParseStructTag(i, bindingTagKey)
-	return ice.BindStructFunc(i, func(s string) []string {
+	m := reflectutil.ParseStructTag(i, bindingTagKey)
+	return reflectutil.BindStructFunc(i, func(s string) []string {
 		if v, ok := m[s]; ok {
 			s = v
 		} else {
@@ -208,8 +208,8 @@ func (r *Request) BindForm(i interface{}) error {
 	if err := r.Raw.ParseForm(); err != nil {
 		return err
 	}
-	m := ice.ParseStructTag(i, bindingTagKey)
-	return ice.BindStructFunc(i, func(s string) []string {
+	m := reflectutil.ParseStructTag(i, bindingTagKey)
+	return reflectutil.BindStructFunc(i, func(s string) []string {
 		if v, ok := m[s]; ok {
 			s = v
 		} else {
